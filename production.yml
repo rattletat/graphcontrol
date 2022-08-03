@@ -11,7 +11,7 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     image: graphwatch_production_django
-    platform: linux/x86_64
+    # platform: linux/x86_64
     depends_on:
       - postgres
       - redis
