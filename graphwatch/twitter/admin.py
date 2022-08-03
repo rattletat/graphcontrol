@@ -43,7 +43,7 @@ class IsBotFilter(admin.SimpleListFilter):
 
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ["username", "get_bot_status"]
+    list_display = ["username", "get_tweet_count", "get_bot_status"]
     fields = ["username", "twitter_id", "description"]
     readonly_fields = ("twitter_id", "description")
     save_as_continue = False
@@ -53,6 +53,10 @@ class AccountAdmin(admin.ModelAdmin):
         if account:  # editing an existing object
             return self.readonly_fields + ("username",)
         return self.readonly_fields
+
+    @admin.display(description="# Tweets")
+    def get_tweet_count(self, account):
+        return Tweet.objects.filter(user=account).count()
 
     @admin.display(description="Is Bot?", boolean=True)
     def get_bot_status(self, account):
