@@ -16,7 +16,7 @@ def get_user_tweets(handle, user_id):
     if handle.api_version == handle.APIVersion.V1:
         return handle.api.user_timeline(user_id=user_id, count=10)
     elif handle.api_version == handle.APIVersion.V2:
-        return handle.api.get_users_tweets(id=user_id, user_auth=True)
+        return handle.api.get_users_tweets(id=user_id, user_auth=True).data
     else:
         raise ValueError("Specified version invalid:", handle.api_version)
 
@@ -29,7 +29,7 @@ def get_user_object(handle, username, fields=["description"]):
     elif handle.api_version == handle.APIVersion.V2:
         return handle.api.get_user(
             username=username, user_fields=fields, user_auth=True
-        )
+        ).data
     else:
         raise ValueError("Specified version invalid:", handle.api_version)
 
