@@ -6,6 +6,7 @@ from .models import Account, Handle, Tweet
 @admin.register(Handle)
 class HandleAdmin(admin.ModelAdmin):
     list_display = ["user", "api_version", "verified"]
+    list_filter = ["api_version", "verified"]
     readonly_fields = ("user", "api_version", "verified")
 
 
@@ -23,19 +24,19 @@ class HandleInline(admin.StackedInline):
 
 
 class IsBotFilter(admin.SimpleListFilter):
-    title = "is_bot"
+    title = "Bot Status"
     parameter_name = "is_bot"
 
     def lookups(self, request, model_admin):
         return (
-            ("Yes", "Yes"),
-            ("No", "No"),
+            ("Yes", "Only Bots"),
+            ("No", "Only Humans"),
         )
 
     def queryset(self, request, queryset):
         value = self.value()
         if value == "Yes":
-            return queryset.filter(handle__isnull=True)
+            return queryset.exclude(handle__isnull=True)
         elif value == "No":
             return queryset.exclude(handle__isnull=False)
         return queryset
@@ -44,6 +45,7 @@ class IsBotFilter(admin.SimpleListFilter):
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
     list_display = ["username", "get_tweet_count", "get_bot_status"]
+    list_filter = [IsBotFilter]
     fields = ["username", "twitter_id", "description"]
     readonly_fields = ("twitter_id", "description")
     save_as_continue = False
@@ -54,7 +56,7 @@ class AccountAdmin(admin.ModelAdmin):
             return self.readonly_fields + ("username",)
         return self.readonly_fields
 
-    @admin.display(description="# Tweets")
+    @admin.display(description="# Tweets", ordering="-get_tweet_count")
     def get_tweet_count(self, account):
         return Tweet.objects.filter(user=account).count()
 

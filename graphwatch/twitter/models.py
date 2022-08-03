@@ -12,6 +12,7 @@ from graphwatch.core.models import Node
 class Account(Node):
     username = models.CharField(
         unique=True,
+        blank=False,
         max_length=15,
         validators=[MinLengthValidator(4)],
     )
@@ -20,8 +21,8 @@ class Account(Node):
     )
     description = models.CharField(max_length=200, null=True, default=None)
 
-    def save(self, *args, **kwargs):
-        if self._state.adding:
+    def save(self, refresh=True, *args, **kwargs):
+        if self._state.adding or refresh:
             transaction.on_commit(
                 lambda: celery_app.send_task(
                     "graphwatch.twitter.tasks.update_user_info", [self.username]

@@ -1,6 +1,10 @@
+from allauth.account.models import EmailAddress
 from django import forms
 from django.contrib import admin
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
+from rest_framework.authtoken.models import TokenProxy
 
 from graphwatch.twitter.models import Account
 
@@ -42,7 +46,8 @@ class MonitorAdmin(admin.ModelAdmin):
             .filter(node__polymorphic_ctype=twitter_account_content_type)
         )
 
-    # def formfield_for_foreignkey(self, db_field, request, **kwargs):
-    #     if db_field.name == "node":
-    #         kwargs["node"] = Account.objects.all()
-    #     return super(MonitorAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
+admin.site.unregister(Site)
+admin.site.unregister(Group)
+admin.site.unregister(TokenProxy)
+admin.site.unregister(EmailAddress)

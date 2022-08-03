@@ -18,10 +18,14 @@ def update_user_info(username):
     such as the Twitter user ID and bio"""
     account = Account.objects.get(username=username)
     handle = account.handle if hasattr(account, "handle") else Handle.get_random()
-    user = get_user_object(handle, username=username)
-    account.twitter_id = str(user.id)
-    account.bio = user.description
-    account.save()
+    try:
+        user = get_user_object(handle, username=username)
+    except tweepy_errors.NotFound:
+        account.delete()
+    else:
+        account.twitter_id = str(user.id)
+        account.bio = user.description
+        account.save(refresh=False)
 
 
 @celery_app.task(max_retries=1)
