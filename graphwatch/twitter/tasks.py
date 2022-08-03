@@ -14,6 +14,8 @@ from .models import Account, Handle, Tweet
 
 @celery_app.task(max_retries=1)
 def update_user_info(username):
+    """Updates the account model with some additional information
+    such as the Twitter user ID and bio"""
     account = Account.objects.get(username=username)
     handle = account.handle if hasattr(account, "handle") else Handle.get_random()
     user = get_user_object(handle, username=username)
@@ -24,6 +26,8 @@ def update_user_info(username):
 
 @celery_app.task(max_retries=1)
 def validate_handle(handle_id):
+    """Validates the handle data by determining and setting the
+    corresponding API version and related user account"""
     handle = Handle.objects.get(id=handle_id)
     try:
         determine_API_version(handle)
@@ -40,6 +44,8 @@ def validate_handle(handle_id):
 
 @celery_app.task(max_retries=1)
 def fetch_all_tweets():
+    """Fetches the ten most recent tweets of every Twitter user and skips
+    over private profiles (if they do not provide an account handle)"""
     for account in Account.objects.all():
         if account.twitter_id:
             handle = (
@@ -56,6 +62,8 @@ def fetch_all_tweets():
 
 # ACTIONS
 # ------------------------------------------------------------------
+
+
 @celery_app.task(max_retries=1)
 def like_tweet_by_random_bot(tweet_id):
     """Likes the specified tweet by a random bot.
