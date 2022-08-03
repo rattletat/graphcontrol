@@ -94,7 +94,7 @@ class Handle(UUIDModel):
 
 
 class Tweet(Node):
-    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE, null=True)
     twitter_id = models.CharField(max_length=20, unique=True)
     text = models.CharField(max_length=600)
 
