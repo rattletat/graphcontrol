@@ -11,6 +11,7 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     image: graphwatch_production_django
+    container_name: graphwatch-django
     # platform: linux/x86_64
     depends_on:
       - postgres
@@ -25,6 +26,7 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     image: graphwatch_production_postgres
+    container_name: graphwatch-postgres
     volumes:
       - production_postgres_data:/var/lib/postgresql/data:Z
       - production_postgres_data_backups:/backups:z
@@ -47,18 +49,22 @@ services:
 
   redis:
     image: redis:6
+    container_name: graphwatch-redis
 
   celeryworker:
     <<: *django
     image: graphwatch_production_celeryworker
+    container_name: graphwatch-celeryworker
     command: /start-celeryworker
 
   celerybeat:
     <<: *django
     image: graphwatch_production_celerybeat
+    container_name: graphwatch-celerybeat
     command: /start-celerybeat
 
   flower:
     <<: *django
     image: graphwatch_production_flower
+    container_name: graphwatch-flower
     command: /start-flower
