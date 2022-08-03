@@ -48,7 +48,9 @@ class Handle(UUIDModel):
         V1 = "V1", "API Version 1"
         V2 = "V2", "API Version 2"
 
-    user = models.OneToOneField(Account, on_delete=models.CASCADE, null=True)
+    user = models.OneToOneField(
+        Account, on_delete=models.CASCADE, null=True, blank=True
+    )
     verified = models.BooleanField(default=False)
     api_version = models.CharField(
         "API Version", max_length=2, choices=APIVersion.choices, default=APIVersion.V1
