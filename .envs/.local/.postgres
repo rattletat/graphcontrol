@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=graphwatch
+POSTGRES_USER=pTHYrjscJoaACFUjvYhFKjMoIytscOqo
+POSTGRES_PASSWORD=0s7k7KS9cvlk6FTr8GDOkmRXZIEfgeqWRNIr6Dqy4aaaEPxBN4N5uXqzhQGmWZGh
