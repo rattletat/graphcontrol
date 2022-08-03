@@ -60,6 +60,23 @@ def fetch_all_tweets():
                 pass
 
 
+@celery_app.task(max_retries=1)
+def fetch_monitored_tweets():
+    """Fetches the ten most recent tweets of monitored Twitter users"""
+    for account in Account.objects.exclude(monitor__isnull=True):
+        if account.twitter_id:
+            handle = (
+                account.handle if hasattr(account, "handle") else Handle.get_random()
+            )
+            try:
+                tweets = get_user_tweets(handle, account.twitter_id)
+                for tweet in tweets:
+                    if not Tweet.objects.filter(twitter_id=tweet.id).exists():
+                        Tweet(user=account, twitter_id=tweet.id, text=tweet.text).save()
+            except tweepy_errors.Unauthorized:
+                pass
+
+
 # ACTIONS
 # ------------------------------------------------------------------
 
