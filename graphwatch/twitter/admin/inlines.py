@@ -1,6 +1,6 @@
 from django.forms import BaseInlineFormSet
 
-from ..models import Tweet
+from ..models import Handle, Tweet
 from .mixins import ReadOnlyTabularInline
 
 
@@ -22,3 +22,10 @@ class TweetInline(ReadOnlyTabularInline):
     max_num = 5
     verbose_name = "Last Tweet"
     verbose_name_plural = "Last Tweets"
+    show_change_link = True
+
+
+class HandleInline(ReadOnlyTabularInline):
+    fields = ["api_version", "verified"]
+    show_change_link = True
+    model = Handle
