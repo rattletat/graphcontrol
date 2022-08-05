@@ -37,7 +37,7 @@ class Account(Node):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Twitter Account: {self.username}"
+        return f"Twitter Account: {self.name}"
 
     def run_validators(self) -> None:
         for field_name, field_value in model_to_dict(self).items():
