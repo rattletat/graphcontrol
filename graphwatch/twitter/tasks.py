@@ -90,7 +90,7 @@ def fetch_all_tweets():
 def fetch_monitored_tweets():
     """Fetches the ten most recent tweets of monitored Twitter users.
     Returns list of fetched Tweet ids."""
-    accounts = Account.objects.exclude(monitor__isnull=True)
+    accounts = Account.objects.exclude(monitors__isnull=True)
     fetch_tweets(accounts)
 
 
