@@ -1,11 +1,11 @@
 from django.db import models
-from model_utils.models import UUIDModel
+from model_utils.models import TimeStampedModel, UUIDModel
 from polymorphic.models import PolymorphicModel
 
 from config import celery_app
 
 
-class Node(UUIDModel, PolymorphicModel):
+class Node(UUIDModel, TimeStampedModel, PolymorphicModel):
     def dispatch_event(self, event, node_id=None):
         monitors = Monitor.objects.filter(node=self, event=event)
         for monitor in monitors:
@@ -28,7 +28,7 @@ class Node(UUIDModel, PolymorphicModel):
 
 
 class Monitor(UUIDModel):
-    node = models.ForeignKey(Node, on_delete=models.CASCADE)
+    node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name="monitors")
     event = models.CharField(max_length=256, blank=True, null=True)
     action = models.CharField(max_length=256, blank=True, null=True)
 

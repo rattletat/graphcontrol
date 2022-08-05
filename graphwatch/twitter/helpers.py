@@ -11,27 +11,37 @@ def determine_API_version(handle):
         get_user_id(handle)
 
 
-def get_user_tweets(handle, user_id):
+def get_user_tweets(handle, user_id, tweet_fields=["created_at"]):
     """Returns the ten most recent tweets of a specified user"""
     if handle.api_version == handle.APIVersion.V1:
         return handle.api.user_timeline(user_id=user_id, count=10)
     elif handle.api_version == handle.APIVersion.V2:
-        return handle.api.get_users_tweets(id=user_id, user_auth=True).data
-    else:
-        raise ValueError("Specified version invalid:", handle.api_version)
-
-
-def get_user_object(handle, username, fields=["description"]):
-    """Returns the Twitter user object of the handle account
-    Note: This object is different depending on whether API V1 or V2 is used"""
-    if handle.api_version == handle.APIVersion.V1:
-        return handle.api.get_user(screen_name=username)
-    elif handle.api_version == handle.APIVersion.V2:
-        return handle.api.get_user(
-            username=username, user_fields=fields, user_auth=True
+        return handle.api.get_users_tweets(
+            id=user_id, tweet_fields=tweet_fields, user_auth=True
         ).data
     else:
         raise ValueError("Specified version invalid:", handle.api_version)
+
+
+def get_user_object(handle, username=None, twitter_id=None, fields=["description"]):
+    """Returns the Twitter user object of the handle account
+    Note: This object is different depending on whether API V1 or V2 is used"""
+    if username and handle.api_version == handle.APIVersion.V1:
+        return handle.api.get_user(screen_name=username)
+    elif twitter_id and handle.api_version == handle.APIVersion.V1:
+        return handle.api.get_user(id=twitter_id)
+    elif username and handle.api_version == handle.APIVersion.V2:
+        return handle.api.get_user(
+            username=username, user_fields=fields, user_auth=True
+        ).data
+    elif twitter_id and handle.api_version == handle.APIVersion.V2:
+        return handle.api.get_user(
+            id=twitter_id, user_fields=fields, user_auth=True
+        ).data
+    else:
+        raise ValueError(
+            "Not provided identifer or specified version invalid:", handle.api_version
+        )
 
 
 def get_username(handle):

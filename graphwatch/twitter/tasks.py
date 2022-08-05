@@ -13,18 +13,26 @@ from .models import Account, Handle, Tweet
 
 
 @celery_app.task(max_retries=1)
-def update_user_info(username):
-    """Updates the account model with some additional information
-    such as the Twitter user ID and bio"""
-    account = Account.objects.get(username=username)
-    handle = account.handle if hasattr(account, "handle") else Handle.get_random()
+def update_account(twitter_id=None, username=None):
+    """Updates the account model with additional information"""
+    if twitter_id:
+        account = Account.objects.get(twitter_id=twitter_id)
+    elif username:
+        account = Account.objects.get(username=username)
+    else:
+        raise ValueError("Must specify twitter id or username")
     try:
-        user = get_user_object(handle, username=username)
+        handle = account.handle if hasattr(account, "handle") else Handle.get_random()
+        user = get_user_object(handle, twitter_id=twitter_id, username=username)
     except tweepy_errors.NotFound:
         account.delete()
     else:
         account.twitter_id = str(user.id)
-        account.bio = user.description
+        account.username = (
+            user.username if hasattr(user, "username") else user.screen_name
+        )
+        account.name = user.name
+        account.description = user.description
         account.save(refresh=False)
 
 
@@ -46,11 +54,10 @@ def validate_handle(handle_id):
     handle.save(refresh=False)
 
 
-@celery_app.task(max_retries=1)
-def fetch_all_tweets():
-    """Fetches the ten most recent tweets of every Twitter user and skips
+def fetch_tweets(accounts):
+    """Fetches the ten most recent tweets of every provided Twitter user and skips
     over private profiles (if they do not provide an account handle)"""
-    for account in Account.objects.all():
+    for account in accounts:
         if account.twitter_id:
             handle = (
                 account.handle if hasattr(account, "handle") else Handle.get_random()
@@ -59,26 +66,32 @@ def fetch_all_tweets():
                 tweets = get_user_tweets(handle, account.twitter_id)
                 for tweet in tweets:
                     if not Tweet.objects.filter(twitter_id=tweet.id).exists():
-                        Tweet(user=account, twitter_id=tweet.id, text=tweet.text).save()
+                        tweet = Tweet(
+                            user=account,
+                            twitter_id=tweet.id,
+                            text=tweet.text,
+                            created_at=tweet.created_at,
+                        )
+                        tweet.save()
+                        yield tweet.twitter_id
             except tweepy_errors.Unauthorized:
                 pass
+
+
+@celery_app.task(max_retries=1)
+def fetch_all_tweets():
+    """Fetches the ten most recent tweets of all Twitter users.
+    Returns list of fetched Tweet ids."""
+    accounts = Account.objects.all()
+    return list(fetch_tweets(accounts))
 
 
 @celery_app.task(max_retries=1)
 def fetch_monitored_tweets():
-    """Fetches the ten most recent tweets of monitored Twitter users"""
-    for account in Account.objects.exclude(monitor__isnull=True):
-        if account.twitter_id:
-            handle = (
-                account.handle if hasattr(account, "handle") else Handle.get_random()
-            )
-            try:
-                tweets = get_user_tweets(handle, account.twitter_id)
-                for tweet in tweets:
-                    if not Tweet.objects.filter(twitter_id=tweet.id).exists():
-                        Tweet(user=account, twitter_id=tweet.id, text=tweet.text).save()
-            except tweepy_errors.Unauthorized:
-                pass
+    """Fetches the ten most recent tweets of monitored Twitter users.
+    Returns list of fetched Tweet ids."""
+    accounts = Account.objects.exclude(monitor__isnull=True)
+    fetch_tweets(accounts)
 
 
 # ACTIONS

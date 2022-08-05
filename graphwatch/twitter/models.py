@@ -10,22 +10,27 @@ from graphwatch.core.models import Node
 
 
 class Account(Node):
+    twitter_id = models.CharField(
+        "Twitter ID", max_length=20, unique=True, null=True, default=None
+    )
     username = models.CharField(
         unique=True,
         blank=False,
         max_length=15,
         validators=[MinLengthValidator(4)],
     )
-    twitter_id = models.CharField(
-        "Twitter ID", max_length=20, unique=True, null=True, default=None
+    name = models.CharField(max_length=50, blank=True)
+    description = models.CharField(max_length=200, blank=True)
+    following = models.ManyToManyField(
+        "self", related_name="followers", blank=True, symmetrical=False
     )
-    description = models.CharField(max_length=200, null=True, default=None)
 
     def save(self, refresh=True, *args, **kwargs):
         if self._state.adding or refresh:
             transaction.on_commit(
                 lambda: celery_app.send_task(
-                    "graphwatch.twitter.tasks.update_user_info", [self.username]
+                    "graphwatch.twitter.tasks.update_account",
+                    kwargs={"username": self.username},
                 )
             )
         self.run_validators()
@@ -43,11 +48,17 @@ class Account(Node):
                 if field_value is not None:
                     validator_func(field_value)
 
+    def get_or_random_handle(self):
+        if hasattr(self, "handle"):
+            return self.handle
+        else:
+            return Handle.get_random()
+
 
 class Handle(UUIDModel):
     class APIVersion(models.TextChoices):
-        V1 = "V1", "API Version 1"
-        V2 = "V2", "API Version 2"
+        V1 = "V1", "Version 1"
+        V2 = "V2", "Version 2"
 
     user = models.OneToOneField(
         Account, on_delete=models.CASCADE, null=True, blank=True
@@ -100,6 +111,7 @@ class Tweet(Node):
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
     twitter_id = models.CharField(max_length=20, unique=True)
     text = models.CharField(max_length=600)
+    created_at = models.DateTimeField()
 
     def __str__(self):
         return f"Tweet by {self.user.username}: {truncatechars(self.text, 100)}"
@@ -109,3 +121,6 @@ class Tweet(Node):
             lambda: self.user.dispatch_event("tweet_created", self.twitter_id)
         )
         super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ["-created_at"]
