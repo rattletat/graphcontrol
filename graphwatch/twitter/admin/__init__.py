@@ -5,7 +5,7 @@ from django.utils.http import urlencode
 
 from ..models import Account, Handle, Tweet
 from .filters import IsBotFilter, IsMonitoredFilter
-from .inlines import HandleInline, TweetInline
+from .inlines import HandleInline, MonitorInline, TweetInline
 
 
 @admin.register(Handle)
@@ -34,7 +34,10 @@ class AccountAdmin(admin.ModelAdmin):
             return []
         inlines = super().get_inline_instances(request, account)
         if hasattr(account, "handle"):
-            inlines.append(HandleInline(self.model, self.admin_site))
+            inlines.insert(0, HandleInline(self.model, self.admin_site))
+        if account.monitors.exists():
+            inlines.insert(0, MonitorInline(self.model, self.admin_site))
+
         return inlines
 
     @admin.display(description="# Tweets")

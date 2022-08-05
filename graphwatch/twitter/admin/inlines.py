@@ -1,5 +1,7 @@
 from django.forms import BaseInlineFormSet
 
+from graphwatch.core.models import Monitor
+
 from ..models import Handle, Tweet
 from .mixins import ReadOnlyTabularInline
 
@@ -29,3 +31,9 @@ class HandleInline(ReadOnlyTabularInline):
     fields = ["api_version", "verified"]
     show_change_link = True
     model = Handle
+
+
+class MonitorInline(ReadOnlyTabularInline):
+    fields = ["event", "action"]
+    show_change_link = True
+    model = Monitor
