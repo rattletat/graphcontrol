@@ -1,39 +1,50 @@
-from django.forms import BaseInlineFormSet
+from polymorphic.admin import StackedPolymorphicInline
 
-from graphwatch.core.models import Monitor
+from graphwatch.core.forms import ActionInlineForm
 
-from ..models import Handle, Tweet
+from ..models import actions, nodes
+from .forms import TweetInlineForm  # , FollowingInlineForm
 from .mixins import ReadOnlyTabularInline
 
 
-class LastFiveTweetsForm(BaseInlineFormSet):
-    """Base Inline formset to limit inline Model query results."""
+class LikeActionInline(StackedPolymorphicInline.Child):
+    model = actions.LikeAction
+    form = ActionInlineForm
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        _kwargs = {self.fk.name: kwargs["instance"]}
-        self.queryset = kwargs["queryset"].filter(**_kwargs)[:5]
+
+class FollowActionInline(StackedPolymorphicInline.Child):
+    model = actions.FollowAction
+    form = ActionInlineForm
+
+
+class UnfollowActionInline(StackedPolymorphicInline.Child):
+    model = actions.UnfollowAction
+    form = ActionInlineForm
+
+
+ACTION_INLINES = (LikeActionInline, FollowActionInline, UnfollowActionInline)
 
 
 class TweetInline(ReadOnlyTabularInline):
-    formset = LastFiveTweetsForm
+    formset = TweetInlineForm
     fields = ["created_at", "text"]
     readonly_fields = ["created_at", "text"]
-    model = Tweet
-    fk_name = "user"
-    max_num = 5
+    model = nodes.Tweet
+    fk_name = "author"
     verbose_name = "Last Tweet"
     verbose_name_plural = "Last Tweets"
-    show_change_link = True
 
 
 class HandleInline(ReadOnlyTabularInline):
     fields = ["api_version", "verified"]
     show_change_link = True
-    model = Handle
+    model = nodes.Handle
 
 
-class MonitorInline(ReadOnlyTabularInline):
-    fields = ["event", "action"]
-    show_change_link = True
-    model = Monitor
+# class FollowingInline(ReadOnlyTabularInline):
+#     # formset = TweetInlineForm
+#     fields = ["to_account"]
+#     model = Account.following.through
+#     fk_name = "from_account"
+#     verbose_name_plural = "Following"
+#     form = FollowingInlineForm

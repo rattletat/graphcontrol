@@ -1,5 +1,4 @@
 import tweepy
-from django.core.validators import MinLengthValidator
 from django.db import models, transaction
 from django.forms.models import model_to_dict
 from django.template.defaultfilters import truncatechars
@@ -13,12 +12,7 @@ class Account(Node):
     twitter_id = models.CharField(
         "Twitter ID", max_length=20, unique=True, null=True, default=None
     )
-    username = models.CharField(
-        unique=True,
-        blank=False,
-        max_length=15,
-        validators=[MinLengthValidator(4)],
-    )
+    username = models.CharField(unique=True, blank=False, max_length=15)
     name = models.CharField(max_length=50, blank=True)
     description = models.CharField(max_length=200, blank=True)
     following = models.ManyToManyField(
@@ -26,18 +20,18 @@ class Account(Node):
     )
 
     def save(self, refresh=True, *args, **kwargs):
-        if self._state.adding or refresh:
+        if self._state.adding and refresh:
             transaction.on_commit(
                 lambda: celery_app.send_task(
-                    "graphwatch.twitter.tasks.update_account",
-                    kwargs={"username": self.username},
+                    "Update Twitter Account",
+                    kwargs={"username": self.username, "creation": self._state.adding},
                 )
             )
         self.run_validators()
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Twitter Account: {self.name}"
+        return f"{self.name}"
 
     def run_validators(self) -> None:
         for field_name, field_value in model_to_dict(self).items():
@@ -48,7 +42,7 @@ class Account(Node):
                 if field_value is not None:
                     validator_func(field_value)
 
-    def get_or_random_handle(self):
+    def get_handle(self):
         if hasattr(self, "handle"):
             return self.handle
         else:
@@ -60,7 +54,7 @@ class Handle(UUIDModel):
         V1 = "V1", "Version 1"
         V2 = "V2", "Version 2"
 
-    user = models.OneToOneField(
+    account = models.OneToOneField(
         Account, on_delete=models.CASCADE, null=True, blank=True
     )
     verified = models.BooleanField(default=False)
@@ -97,9 +91,7 @@ class Handle(UUIDModel):
     def save(self, refresh=True, *args, **kwargs):
         if self._state.adding or refresh:
             transaction.on_commit(
-                lambda: celery_app.send_task(
-                    "graphwatch.twitter.tasks.validate_handle", [self.id]
-                )
+                lambda: celery_app.send_task("Update Twitter Handle", [self.id])
             )
         super().save(*args, **kwargs)
 
@@ -108,19 +100,14 @@ class Handle(UUIDModel):
 
 
 class Tweet(Node):
-    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    author = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="tweets")
     twitter_id = models.CharField(max_length=20, unique=True)
     text = models.CharField(max_length=600)
     created_at = models.DateTimeField()
+    like_count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        return f"Tweet by {self.user.username}: {truncatechars(self.text, 100)}"
-
-    def save(self, *args, **kwargs):
-        transaction.on_commit(
-            lambda: self.user.dispatch_event("tweet_created", self.twitter_id)
-        )
-        super().save(*args, **kwargs)
+        return f"Tweet by {self.author.username}: {truncatechars(self.text, 100)}"
 
     class Meta:
         ordering = ["-created_at"]

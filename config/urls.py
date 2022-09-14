@@ -7,6 +7,9 @@ from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
 
+import graphwatch.core.forms  # noqa: F401
+from graphwatch.core import views as core_views
+
 admin.site.site_header = "Graph Watch"
 admin.site.index_title = "Control Panel"
 admin.site.site_title = "Graph Watch"
@@ -36,7 +39,18 @@ urlpatterns += [
         SpectacularSwaggerView.as_view(url_name="api-schema"),
         name="api-docs",
     ),
+    path(
+        "api/autocomplete/event-source",
+        core_views.EventSourceSelect.as_view(),
+        name="event_source_autocomplete",
+    ),
+    path(
+        "api/autocomplete/event-target",
+        core_views.EventTargetSelect.as_view(),
+        name="event_target_autocomplete",
+    ),
 ]
+
 
 if settings.DEBUG:
     # This allows the error pages to be debugged during development, just visit
