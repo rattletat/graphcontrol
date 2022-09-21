@@ -4,7 +4,11 @@ from django.shortcuts import reverse
 from django.urls import path
 from django.utils.html import format_html
 from django.utils.http import urlencode
-from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicParentModelAdmin
+from polymorphic.admin import (
+    PolymorphicChildModelAdmin,
+    PolymorphicParentModelAdmin,
+    PolymorphicChildModelFilter,
+)
 from django.db.models import Count
 
 from ..models import Account, Handle, Tweet, actions, events
@@ -39,8 +43,6 @@ class AccountAdmin(admin.ModelAdmin):
         "update_following_button",
         "update_followers_button",
         "update_tweets_button",
-        "created",
-        "modified",
     ]
     readonly_fields = [
         "twitter_id",
@@ -49,8 +51,6 @@ class AccountAdmin(admin.ModelAdmin):
         "update_following_button",
         "update_followers_button",
         "update_tweets_button",
-        "created",
-        "modified",
     ]
     search_fields = ["username", "name"]
     list_per_page = 10
@@ -195,7 +195,7 @@ class TweetAdmin(admin.ModelAdmin):
         return tweet.author.name
 
 
-class TwitterEventChildAdmin(PolymorphicChildModelAdmin, ReadOnlyAdmin):
+class TwitterEventChildAdmin(PolymorphicChildModelAdmin):
     """Base admin class for all child models"""
 
     base_model = events.TwitterEvent
@@ -205,12 +205,12 @@ class TwitterEventChildAdmin(PolymorphicChildModelAdmin, ReadOnlyAdmin):
 
 
 @admin.register(events.TweetEvent)
-class TweetEventAdmin(TwitterEventChildAdmin):
+class TweetEventChildAdmin(TwitterEventChildAdmin):
     base_model = events.TweetEvent
 
 
 @admin.register(events.FollowEvent)
-class FollowEventAdmin(TweetEventAdmin):
+class FollowEventAdmin(TweetEventChildAdmin):
     base_model = events.FollowEvent
 
 
@@ -235,12 +235,14 @@ class DescriptionChangeEventAdmin(NameChangeEventAdmin):
 
 
 @admin.register(events.TwitterEvent)
-class TwitterEventAdmin(PolymorphicParentModelAdmin, ReadOnlyAdmin):
+class TwitterEventParentAdmin(PolymorphicParentModelAdmin, ReadOnlyAdmin):
 
     base_model = events.TwitterEvent
     list_display = ["__str__", "created"]
     ordering = ["-created"]
     polymorphic_list = True
+    list_filter = (PolymorphicChildModelFilter,)
+    list_per_page = 10
     child_models = (
         events.TweetEvent,
         events.FollowEvent,
@@ -266,10 +268,31 @@ class LikeActionAdmin(TwitterActionChildAdmin):
     base_model = actions.LikeAction
 
 
+@admin.register(actions.FollowAction)
+class FollowActionAdmin(LikeActionAdmin):
+    base_model = actions.FollowAction
+
+
+@admin.register(actions.UnfollowAction)
+class UnfollowActionAdmin(FollowActionAdmin):
+    base_model = actions.UnfollowAction
+
+
+@admin.register(actions.TweetAction)
+class TweetActionAdmin(UnfollowActionAdmin):
+    base_model = actions.TweetAction
+
+
 @admin.register(actions.TwitterAction)
-class TwitterActionAdmin(PolymorphicParentModelAdmin):
+class TwitterActionParentAdmin(PolymorphicParentModelAdmin):
 
     base_model = actions.TwitterAction
     list_display = ["__str__"]
+    list_filter = (PolymorphicChildModelFilter,)
     polymorphic_list = True
-    child_models = (actions.LikeAction,)
+    child_models = (
+        actions.LikeAction,
+        actions.FollowAction,
+        actions.UnfollowAction,
+        actions.TweetAction,
+    )

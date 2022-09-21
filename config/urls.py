@@ -40,14 +40,14 @@ urlpatterns += [
         name="api-docs",
     ),
     path(
-        "api/autocomplete/event-source",
-        core_views.EventSourceSelect.as_view(),
-        name="event_source_autocomplete",
+        "api/autocomplete/monitor-source",
+        core_views.MonitorSourceSelect.as_view(),
+        name="monitor_source_autocomplete",
     ),
     path(
-        "api/autocomplete/event-target",
-        core_views.EventTargetSelect.as_view(),
-        name="event_target_autocomplete",
+        "api/autocomplete/monitor-target",
+        core_views.MonitorTargetSelect.as_view(),
+        name="monitor_target_autocomplete",
     ),
 ]
 

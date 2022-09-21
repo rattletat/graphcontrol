@@ -22,7 +22,17 @@ class UnfollowActionInline(StackedPolymorphicInline.Child):
     form = ActionInlineForm
 
 
-ACTION_INLINES = (LikeActionInline, FollowActionInline, UnfollowActionInline)
+class TweetActionInline(StackedPolymorphicInline.Child):
+    model = actions.TweetAction
+    form = ActionInlineForm
+
+
+ACTION_INLINES = (
+    LikeActionInline,
+    FollowActionInline,
+    UnfollowActionInline,
+    TweetActionInline,
+)
 
 
 class TweetInline(ReadOnlyTabularInline):

@@ -1,6 +1,6 @@
 from config import celery_app
 
-from ..helpers import follow_user, like_tweet, unfollow_user
+from ..helpers import follow_user, like_tweet, tweet_text, unfollow_user
 from ..models import Account, Handle
 
 
@@ -39,3 +39,11 @@ def unfollow_user_task(follower_id, following_id):
     account = Account.objects.get(twitter_id=follower_id)
     handle = account.handle
     unfollow_user(handle, following_id)
+
+
+@celery_app.task(name="Tweet Text", max_retries=1)
+def tweet_text_task(account_id, text):
+    """Tweets the specified text"""
+    account = Account.objects.get(twitter_id=account_id)
+    handle = account.handle
+    tweet_text(handle, text)

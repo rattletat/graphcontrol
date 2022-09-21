@@ -1,6 +1,5 @@
 import tweepy
 from django.db import models, transaction
-from django.forms.models import model_to_dict
 from django.template.defaultfilters import truncatechars
 from model_utils.models import UUIDModel
 
@@ -27,20 +26,10 @@ class Account(Node):
                     kwargs={"username": self.username, "creation": self._state.adding},
                 )
             )
-        self.run_validators()
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name}"
-
-    def run_validators(self) -> None:
-        for field_name, field_value in model_to_dict(self).items():
-            model_field = getattr(Account, field_name)
-            field = getattr(model_field, "field", object())
-            validators = getattr(field, "validators", list())
-            for validator_func in validators:
-                if field_value is not None:
-                    validator_func(field_value)
 
     def get_handle(self):
         if hasattr(self, "handle"):
@@ -89,7 +78,7 @@ class Handle(UUIDModel):
             raise ValueError("Specified version invalid:", self.api_version)
 
     def save(self, refresh=True, *args, **kwargs):
-        if self._state.adding or refresh:
+        if refresh:
             transaction.on_commit(
                 lambda: celery_app.send_task("Update Twitter Handle", [self.id])
             )

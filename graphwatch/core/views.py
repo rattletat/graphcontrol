@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from .models import Node
 
 
-class EventSourceSelect(autocomplete.Select2QuerySetView):
+class MonitorSourceSelect(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         """Customize the queryset for this class view"""
 
@@ -23,7 +23,7 @@ class EventSourceSelect(autocomplete.Select2QuerySetView):
         return queryset
 
 
-class EventTargetSelect(autocomplete.Select2QuerySetView):
+class MonitorTargetSelect(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         """Customize the queryset for this class view"""
 

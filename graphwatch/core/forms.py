@@ -5,10 +5,10 @@ from django import forms
 from graphwatch.core.models import Monitor
 
 djhacker.formfield(
-    Monitor.event_source,
+    Monitor.source,
     forms.ModelChoiceField,
     widget=autocomplete.ModelSelect2(
-        url="event_source_autocomplete",
+        url="monitor_source_autocomplete",
         forward=["event_type"],
         attrs={
             "data-placeholder": "Select source",
@@ -16,10 +16,10 @@ djhacker.formfield(
     ),
 )
 djhacker.formfield(
-    Monitor.event_target,
+    Monitor.target,
     forms.ModelChoiceField,
     widget=autocomplete.ModelSelect2(
-        url="event_target_autocomplete",
+        url="monitor_target_autocomplete",
         forward=["event_type"],
         attrs={
             "data-placeholder": "Select target",

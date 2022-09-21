@@ -19,11 +19,15 @@ class Edge(UUIDModel, TimeStampedModel, PolymorphicModel):
         Node,
         on_delete=models.CASCADE,
         related_name="outgoing_edges",
+        null=True,
+        blank=True,
     )
     target = models.ForeignKey(
         Node,
         on_delete=models.CASCADE,
         related_name="incoming_edges",
+        null=True,
+        blank=True,
     )
 
 
@@ -35,8 +39,8 @@ class Event(Edge):
         super().save(*args, **kwargs)
         real_event = self.get_real_instance()
         monitors = Monitor.objects.filter(
-            Q(event_source=None) | Q(event_source=self.source),
-            Q(event_target=None) | Q(event_source=self.target),
+            Q(source=None) | Q(source=self.source),
+            Q(target=None) | Q(source=self.target),
             event_type=real_event.polymorphic_ctype,
         )
         for monitor in monitors:
@@ -44,49 +48,39 @@ class Event(Edge):
                 action.execute()
 
 
-class Monitor(UUIDModel):
+class Monitor(Edge):
+    # TODO: Use event foreignkey instead of this
     event_type = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE,
         limit_choices_to=~Q(app_label="core") & Q(model__endswith="event"),
     )
-    event_source = models.ForeignKey(
-        Node,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="outgoing_monitors",
-    )
-    event_target = models.ForeignKey(
-        Node,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="incoming_monitors",
-    )
 
     def __str__(self):
+        # TODO: Make more expressive
         event_name = self.event_type.name.title()
-        real_source = self.event_source.real_instance if self.event_source else None
-        real_target = self.event_target.real_instance if self.event_target else None
-        if self.event_source and self.event_target:
+        real_source = self.source.real_instance if self.source else None
+        real_target = self.target.real_instance if self.target else None
+        if self.source and self.target:
             return f"{event_name}: {real_source} -> {real_target}"
-        if self.event_source:
+        if self.source:
             return f"{event_name}: {real_source}"
-        if self.event_target:
+        if self.target:
             return f"{event_name}: {real_target}"
         return f"{event_name}"
 
 
 class Action(Edge):
-    monitor = models.ForeignKey(
+    event_monitor = models.ForeignKey(
         Monitor,
         on_delete=models.CASCADE,
         related_name="actions",
     )
 
     def get_source_queryset(self):
+        # return Node.objects.none()
         raise NotImplementedError
 
     def get_target_queryset(self):
+        # return Node.objects.none()
         raise NotImplementedError
