@@ -5,6 +5,7 @@ from django.urls import path
 from django.utils.html import format_html
 from django.utils.http import urlencode
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicParentModelAdmin
+from django.db.models import Count
 
 from ..models import Account, Handle, Tweet, actions, events
 from ..tasks import update as update_tasks
@@ -131,7 +132,15 @@ class AccountAdmin(admin.ModelAdmin):
 
         return inlines
 
-    @admin.display(description="# Tweets")
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.annotate(
+            follower_count=Count("followers"),
+            following_count=Count("following"),
+            tweet_count=Count("tweets"),
+        )
+
+    @admin.display(description="# Tweets", ordering="tweet_count")
     def view_tweets_link(self, account):
         count = Tweet.objects.filter(author=account).count()
         url = (
@@ -141,7 +150,7 @@ class AccountAdmin(admin.ModelAdmin):
         )
         return format_html('<a href="{}">{}</a>', url, count)
 
-    @admin.display(description="# Following")
+    @admin.display(description="# Following", ordering="following_count")
     def view_following_link(self, account):
         if account.following.exists():
             count = account.following.count()
@@ -154,7 +163,7 @@ class AccountAdmin(admin.ModelAdmin):
         else:
             return ""
 
-    @admin.display(description="# Followers")
+    @admin.display(description="# Followers", ordering="follower_count")
     def view_followers_link(self, account):
         if account.followers.exists():
             count = account.followers.count()
