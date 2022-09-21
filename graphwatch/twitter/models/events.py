@@ -11,7 +11,7 @@ class TweetEvent(TwitterEvent):
     source_model = Account
 
     def __str__(self):
-        return f'{self.source} tweets "{self.target}"'
+        return f'{self.source} tweets "{self.target.real_instance.text}"'
 
 
 class FollowEvent(TwitterEvent):

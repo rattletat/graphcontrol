@@ -67,8 +67,8 @@ class Monitor(UUIDModel):
 
     def __str__(self):
         event_name = self.event_type.name.title()
-        real_source = self.event_source.get_real_instance if self.event_source else None
-        real_target = self.event_target.get_real_instance if self.event_target else None
+        real_source = self.event_source.real_instance if self.event_source else None
+        real_target = self.event_target.real_instance if self.event_target else None
         if self.event_source and self.event_target:
             return f"{event_name}: {real_source} -> {real_target}"
         if self.event_source:
