@@ -38,6 +38,8 @@ class AccountAdmin(admin.ModelAdmin):
         "update_following_button",
         "update_followers_button",
         "update_tweets_button",
+        "created",
+        "modified",
     ]
     readonly_fields = [
         "twitter_id",
@@ -46,6 +48,8 @@ class AccountAdmin(admin.ModelAdmin):
         "update_following_button",
         "update_followers_button",
         "update_tweets_button",
+        "created",
+        "modified",
     ]
     search_fields = ["username", "name"]
     list_per_page = 10
