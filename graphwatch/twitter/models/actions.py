@@ -1,4 +1,3 @@
-from config import celery_app
 from graphwatch.core.models import Action
 
 from ..models import Account, Tweet
@@ -17,16 +16,15 @@ class LikeAction(TwitterAction):
         return Tweet.objects.all()
 
     def execute(self):
-        celery_app.send_task(
-            action.like_tweet_task,
+        action.like_tweet_task.apply_async(
             kwargs={
-                "account_id": self.source.twitter_id,
-                "tweet_id": self.target.twitter_id,
+                "account_id": self.source.real_instance.twitter_id,
+                "tweet_id": self.target.real_instance.twitter_id,
             },
         )
 
     def __str__(self):
-        return f"{self.source} likes {self.target}"
+        return f"{self.source.real_instance} likes {self.target.real_instance}"
 
 
 class FollowAction(TwitterAction):
@@ -37,16 +35,15 @@ class FollowAction(TwitterAction):
         return Account.objects.all()
 
     def execute(self):
-        celery_app.send_task(
-            action.follow_user_task,
+        action.follow_user_task.apply_async(
             kwargs={
-                "account_id": self.source.twitter_id,
-                "tweet_id": self.target.twitter_id,
+                "follower_id": self.source.real_instance.twitter_id,
+                "following_id": self.target.real_instance.twitter_id,
             },
         )
 
     def __str__(self):
-        return f"{self.source} follows {self.target}"
+        return f"{self.source.real_instance} follows {self.target.real_instance}"
 
 
 class UnfollowAction(TwitterAction):
@@ -57,13 +54,12 @@ class UnfollowAction(TwitterAction):
         return Account.objects.all()
 
     def execute(self):
-        celery_app.send_task(
-            action.unfollow_user_task,
+        action.unfollow_user_task.apply_async(
             kwargs={
-                "account_id": self.source.twitter_id,
-                "tweet_id": self.target.twitter_id,
+                "follower_id": self.source.real_instance.twitter_id,
+                "following_id": self.target.real_instance.twitter_id,
             },
         )
 
     def __str__(self):
-        return f"{self.source} unfollows {self.target}"
+        return f"{self.source.real_instance} unfollows {self.target.real_instance}"

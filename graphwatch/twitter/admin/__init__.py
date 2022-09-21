@@ -172,7 +172,7 @@ class AccountAdmin(admin.ModelAdmin):
 
 
 @admin.register(Tweet)
-class TweetAdmin(ReadOnlyAdmin):
+class TweetAdmin(admin.ModelAdmin):
     search_fields = ["author__username", "author__name", "text"]
     list_display = ["get_author_name", "created_at", "text", "like_count"]
     ordering = ["-created_at"]

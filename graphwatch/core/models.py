@@ -9,6 +9,10 @@ class Node(UUIDModel, TimeStampedModel, PolymorphicModel):
     def __str__(self):
         return str(self.get_real_instance())
 
+    @property
+    def real_instance(self):
+        return self.get_real_instance()
+
 
 class Edge(UUIDModel, TimeStampedModel, PolymorphicModel):
     source = models.ForeignKey(
@@ -36,7 +40,7 @@ class Event(Edge):
             event_type=real_event.polymorphic_ctype,
         )
         for monitor in monitors:
-            for action in monitor.actions:
+            for action in monitor.actions.all():
                 action.execute()
 
 
@@ -63,12 +67,8 @@ class Monitor(UUIDModel):
 
     def __str__(self):
         event_name = self.event_type.name.title()
-        real_source = (
-            self.event_source.get_real_instance() if self.event_source else None
-        )
-        real_target = (
-            self.event_target.get_real_instance() if self.event_target else None
-        )
+        real_source = self.event_source.get_real_instance if self.event_source else None
+        real_target = self.event_target.get_real_instance if self.event_target else None
         if self.event_source and self.event_target:
             return f"{event_name}: {real_source} -> {real_target}"
         if self.event_source:
@@ -82,6 +82,11 @@ class Action(Edge):
     monitor = models.ForeignKey(
         Monitor,
         on_delete=models.CASCADE,
+        related_name="actions",
     )
-    source_qs = []
-    target_qs = []
+
+    def get_source_queryset(self):
+        raise NotImplementedError
+
+    def get_target_queryset(self):
+        raise NotImplementedError
