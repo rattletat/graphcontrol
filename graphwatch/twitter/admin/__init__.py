@@ -135,14 +135,14 @@ class AccountAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.annotate(
-            follower_count=Count("followers"),
-            following_count=Count("following"),
-            tweet_count=Count("tweets"),
+            follower_count=Count("followers", distinct=True),
+            following_count=Count("following", distinct=True),
+            tweet_count=Count("tweets", distinct=True),
         )
 
-    @admin.display(description="# Tweets", ordering="tweet_count")
+    @admin.display(description="# Tweets", ordering="-tweet_count")
     def view_tweets_link(self, account):
-        count = Tweet.objects.filter(author=account).count()
+        count = account.tweet_count
         url = (
             reverse("admin:twitter_tweet_changelist")
             + "?"
@@ -150,10 +150,10 @@ class AccountAdmin(admin.ModelAdmin):
         )
         return format_html('<a href="{}">{}</a>', url, count)
 
-    @admin.display(description="# Following", ordering="following_count")
+    @admin.display(description="# Following", ordering="-following_count")
     def view_following_link(self, account):
         if account.following.exists():
-            count = account.following.count()
+            count = account.following_count
             url = (
                 reverse("admin:twitter_account_changelist")
                 + "?"
@@ -163,10 +163,10 @@ class AccountAdmin(admin.ModelAdmin):
         else:
             return ""
 
-    @admin.display(description="# Followers", ordering="follower_count")
+    @admin.display(description="# Followers", ordering="-follower_count")
     def view_followers_link(self, account):
         if account.followers.exists():
-            count = account.followers.count()
+            count = account.follower_count
             url = (
                 reverse("admin:twitter_account_changelist")
                 + "?"
