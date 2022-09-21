@@ -40,7 +40,7 @@ def fetch_random_user_tweets(count=100):
         pass
 
 
-@celery_app.task(name="Fetch Random User Tweets", max_retries=1)
+@celery_app.task(name="Fetch Random User Followers", max_retries=1)
 def fetch_random_user_followers():
     """Fetches the hundred most recent tweets of a random Twitter user.
     Returns list of fetched Tweet ids."""
@@ -51,7 +51,7 @@ def fetch_random_user_followers():
         pass
 
 
-@celery_app.task(name="Fetch Random User Tweets", max_retries=1)
+@celery_app.task(name="Fetch Random User Following", max_retries=1)
 def fetch_random_user_following():
     """Fetches the hundred most recent tweets of a random Twitter user.
     Returns list of fetched Tweet ids."""
