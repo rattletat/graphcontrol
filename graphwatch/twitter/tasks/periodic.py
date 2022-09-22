@@ -62,6 +62,17 @@ def fetch_random_user_following(limit=1000):
         pass
 
 
+@celery_app.task(name="Fetch Oldest User Tweets", max_retries=1)
+def fetch_oldest_user_tweets(limit=1000):
+    """Fetches the thousand most recent tweets of a random Twitter user.
+    Returns list of fetched Tweet ids."""
+    oldest_account = Account.objects.order_by("created").filter(tweets=None).first()
+    try:
+        update.update_tweets.delay(oldest_account.twitter_id, limit=limit)
+    except tweepy_errors.Unauthorized:
+        pass
+
+
 @celery_app.task(name="Fetch Oldest User Following", max_retries=1)
 def fetch_oldest_user_following(limit=1000):
     """Fetches the thousand most recent tweets of the
