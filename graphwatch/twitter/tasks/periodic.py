@@ -111,3 +111,13 @@ def fetch_oldest_user_followers(limit=1000):
     except tweepy_errors.Unauthorized:
         oldest_account.private = True
         oldest_account.save(refresh=False)
+
+
+@celery_app.task(name="Monitor User", max_retries=1)
+def monitor_user(username):
+    """Monitors user."""
+    account = Account.objects.get(username=username)
+    update.update_account(username=username)
+    update.update_followers.run(twitter_id=account.twitter_id, limit=10)
+    update.update_following.run(twitter_id=account.twitter_id, limit=10)
+    update.update_tweets.run(twitter_id=account.twitter_id, limit=10)
