@@ -9,7 +9,7 @@ from polymorphic.admin import (
     PolymorphicChildModelFilter,
 )
 
-# from django.db.models import Count
+from django.db.models import Count
 
 from ..models import Account, Handle, Tweet, actions, events
 from ..tasks import update as update_tasks
@@ -30,7 +30,7 @@ class HandleAdmin(admin.ModelAdmin):
 class AccountAdmin(admin.ModelAdmin):
     list_display = [
         "name",
-        # "view_tweets_link",
+        "view_tweets_link",
         # "view_following_link",
         # "view_followers_link",
         "get_bot_status",
@@ -95,12 +95,11 @@ class AccountAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs
-        # return qs.annotate(
-        #     follower_count=Count("followers", distinct=True),
-        #     following_count=Count("following", distinct=True),
-        #     tweet_count=Count("tweets", distinct=True),
-        # )
+        return qs.annotate(
+            # follower_count=Count("followers", distinct=True),
+            # following_count=Count("following", distinct=True),
+            tweet_count=Count("tweets", distinct=True),
+        )
 
     @admin.display(description="# Tweets", ordering="-tweet_count")
     def view_tweets_link(self, account):
