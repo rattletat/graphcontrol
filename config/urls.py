@@ -49,6 +49,16 @@ urlpatterns += [
         core_views.MonitorTargetSelect.as_view(),
         name="monitor_target_autocomplete",
     ),
+    path(
+        "api/autocomplete/action-source",
+        core_views.ActionSourceSelect.as_view(),
+        name="action_source_autocomplete",
+    ),
+    path(
+        "api/autocomplete/action-target",
+        core_views.ActionTargetSelect.as_view(),
+        name="action_target_autocomplete",
+    ),
 ]
 
 

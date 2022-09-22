@@ -11,11 +11,13 @@ class TwitterAction(Action):
 
 
 class LikeAction(TwitterAction):
-    def get_source_queryset(self):
-        return Account.objects.filter(handle__isnull=False).all()
+    @staticmethod
+    def get_source_queryset():
+        return Account.objects.filter(handle__isnull=False)
 
-    def get_target_queryset(self):
-        return Tweet.objects.all()
+    @staticmethod
+    def get_target_queryset():
+        return Tweet.objects
 
     def execute(self):
         action.like_tweet_task.apply_async(
@@ -30,11 +32,13 @@ class LikeAction(TwitterAction):
 
 
 class FollowAction(TwitterAction):
-    def get_source_queryset(self):
+    @staticmethod
+    def get_source_queryset():
         return Account.objects.filter(handle__isnull=False)
 
-    def get_target_queryset(self):
-        return Account.objects.all()
+    @staticmethod
+    def get_target_queryset():
+        return Account.objects
 
     def execute(self):
         action.follow_user_task.apply_async(
@@ -49,11 +53,13 @@ class FollowAction(TwitterAction):
 
 
 class UnfollowAction(TwitterAction):
-    def get_source_queryset(self):
+    @staticmethod
+    def get_source_queryset():
         return Account.objects.filter(handle__isnull=False)
 
-    def get_target_queryset(self):
-        return Account.objects.all()
+    @staticmethod
+    def get_target_queryset():
+        return Account.objects
 
     def execute(self):
         action.unfollow_user_task.apply_async(
@@ -70,10 +76,12 @@ class UnfollowAction(TwitterAction):
 class TweetAction(TwitterAction):
     text = models.CharField("Tweet text", max_length=280)
 
-    def get_source_queryset(self):
+    @staticmethod
+    def get_source_queryset():
         return Account.objects.filter(handle__isnull=False)
 
-    def get_target_queryset(self):
+    @staticmethod
+    def get_target_queryset():
         return Account.objects.none()
 
     def execute(self):

@@ -1,6 +1,8 @@
 from dal import autocomplete
 from django.contrib.contenttypes.models import ContentType
 
+from graphwatch.twitter.models import Account
+
 from .models import Node
 
 
@@ -8,10 +10,9 @@ class MonitorSourceSelect(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         """Customize the queryset for this class view"""
 
-        if not self.request.user.is_authenticated:
-            return Node.objects.none()
-
         event_ctype_id = self.forwarded.get("event_type", None)
+        if not self.request.user.is_authenticated or not event_ctype_id:
+            return Node.objects.none()
         event_ctype = ContentType.objects.get(id=event_ctype_id)
         event_model = event_ctype.model_class()
         source_model = event_model.source_model
@@ -27,10 +28,10 @@ class MonitorTargetSelect(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         """Customize the queryset for this class view"""
 
-        if not self.request.user.is_authenticated:
+        event_ctype_id = self.forwarded.get("event_type", None)
+        if not self.request.user.is_authenticated or not event_ctype_id:
             return Node.objects.none()
 
-        event_ctype_id = self.forwarded.get("event_type", None)
         event_ctype = ContentType.objects.get(id=event_ctype_id)
         event_model = event_ctype.model_class()
         target_model = event_model.target_model
@@ -47,7 +48,7 @@ class ActionSourceSelect(autocomplete.Select2QuerySetView):
         if not self.request.user.is_authenticated:
             return Node.objects.none()
 
-        queryset = self.forwarded.get("source_qs", None)
+        queryset = Account.objects.filter(handle__isnull=False).all()
         if self.q:
             queryset = list(
                 filter(lambda n: self.q.lower() in str(n).lower(), queryset)
@@ -58,11 +59,14 @@ class ActionSourceSelect(autocomplete.Select2QuerySetView):
 class ActionTargetSelect(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         """Customize the queryset for this class view"""
+        print("Target alive")
+        print(self.request)
+        print(self.forwarded)
 
         if not self.request.user.is_authenticated:
             return Node.objects.none()
 
-        queryset = self.forwarded.get("target_qs", None)
+        queryset = Account.objects.all()
         if self.q:
             queryset = list(
                 filter(lambda n: self.q.lower() in str(n).lower(), queryset)
