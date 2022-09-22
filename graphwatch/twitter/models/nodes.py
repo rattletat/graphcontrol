@@ -91,7 +91,7 @@ class Handle(UUIDModel):
 class Tweet(Node):
     author = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="tweets")
     twitter_id = models.CharField(max_length=20, unique=True)
-    text = models.CharField(max_length=600)
+    text = models.CharField(max_length=1000)
     created_at = models.DateTimeField()
     like_count = models.PositiveIntegerField(default=0)
 
