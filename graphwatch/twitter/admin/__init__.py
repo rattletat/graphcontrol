@@ -29,9 +29,9 @@ class HandleAdmin(admin.ModelAdmin):
 class AccountAdmin(admin.ModelAdmin):
     list_display = [
         "name",
-        "view_tweets_link",
-        "view_following_link",
-        "view_followers_link",
+        # "view_tweets_link",
+        # "view_following_link",
+        # "view_followers_link",
         "get_bot_status",
     ]
     list_filter = [IsBotFilter]
