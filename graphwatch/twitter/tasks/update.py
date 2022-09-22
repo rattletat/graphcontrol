@@ -1,3 +1,4 @@
+import math
 from collections.abc import Iterable
 
 from tweepy import errors as tweepy_errors
@@ -75,10 +76,10 @@ def update_account(twitter_id=None, username=None, creation=False):
 
 
 @celery_app.task(name="Update Recent Tweets", max_retries=1)
-def update_tweets(twitter_id, count=10):
+def update_tweets(twitter_id, limit=math.inf):
     """Fetches the `count` most recent tweets of the specified account."""
     account = Account.objects.get(twitter_id=twitter_id)
-    tweets = get_user_tweets(account.get_handle(), twitter_id, count=count)
+    tweets = get_user_tweets(account.get_handle(), twitter_id, limit=limit)
     for tweet in tweets:
         if not Tweet.objects.filter(twitter_id=tweet["id"]).exists():
             tweet = Tweet.objects.create(
@@ -117,22 +118,26 @@ def _del_follows(edges: Iterable[tuple[Account, Account]]):
 
 
 @celery_app.task(name="Update Twitter Follows", max_retries=1)
-def update_following(twitter_id):
+def update_following(twitter_id, limit=math.inf):
     """Creates and updates the users the specified account is following."""
     account = Account.objects.get(twitter_id=twitter_id)
     old_follows = set(account.following.all())
-    new_follows = set(_get_accounts(get_following(account.get_handle(), twitter_id)))
+    new_follows = set(
+        _get_accounts(get_following(account.get_handle(), twitter_id, limit=limit))
+    )
 
     _add_follows((account, follow) for follow in new_follows - old_follows)
     _del_follows((account, follow) for follow in old_follows - new_follows)
 
 
 @celery_app.task(name="Update Twitter Followers", max_retries=1)
-def update_followers(twitter_id):
+def update_followers(twitter_id, limit=math.inf):
     """Creates and updates users who are followers of the specified account."""
     account = Account.objects.get(twitter_id=twitter_id)
     old_followers = set(account.followers.all())
-    new_followers = set(_get_accounts(get_followers(account.get_handle(), twitter_id)))
+    new_followers = set(
+        _get_accounts(get_followers(account.get_handle(), twitter_id, limit=limit))
+    )
 
     _add_follows((follower, account) for follower in new_followers - old_followers)
     _del_follows((follower, account) for follower in old_followers - new_followers)

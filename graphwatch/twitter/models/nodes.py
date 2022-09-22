@@ -13,7 +13,7 @@ class Account(Node):
     )
     username = models.CharField(unique=True, blank=False, max_length=15)
     name = models.CharField(max_length=50, blank=True)
-    description = models.CharField(max_length=200, blank=True)
+    description = models.CharField(max_length=320, blank=True)
     following = models.ManyToManyField(
         "self", related_name="followers", blank=True, symmetrical=False
     )

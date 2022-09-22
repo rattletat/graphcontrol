@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.shortcuts import reverse
-from django.urls import path
 from django.utils.html import format_html
 from django.utils.http import urlencode
 from polymorphic.admin import (
@@ -40,79 +39,40 @@ class AccountAdmin(admin.ModelAdmin):
         "username",
         "twitter_id",
         "description",
-        "update_following_button",
-        "update_followers_button",
-        "update_tweets_button",
     ]
     readonly_fields = [
         "twitter_id",
         "description",
         "get_bot_status",
-        "update_following_button",
-        "update_followers_button",
-        "update_tweets_button",
     ]
     search_fields = ["username", "name"]
     list_per_page = 10
     save_as_continue = False
+    change_form_template = "admin/account_changeform.html"
 
-    def get_urls(self):
-        urls = super().get_urls()
-        return urls + [
-            path(
-                "update-following/<str:account_id>",
-                self.update_following,
-                name="twitter_update_following",
-            ),
-            path(
-                "update-followers/<str:account_id>",
-                self.update_followers,
-                name="twitter_update_followers",
-            ),
-            path(
-                "update-tweets/<str:account_id>",
-                self.update_tweets,
-                name="twitter_update_tweets",
-            ),
-        ]
-
-    def update_following(self, request, account_id):
-        result = update_tasks.update_following.delay(account_id)
-        self.message_user(
-            request,
-            f"Fetching following (Task: {result.task_id} Status: {result.status}",
-        )
-        return HttpResponseRedirect("../")
-
-    def update_followers(self, request, account_id):
-        result = update_tasks.update_followers.delay(account_id)
-        self.message_user(
-            request,
-            f"Fetching followers (Task: {result.task_id} Status: {result.status}",
-        )
-        return HttpResponseRedirect("../")
-
-    def update_tweets(self, request, account_id):
-        result = update_tasks.update_tweets.delay(account_id, count=100)
-        self.message_user(
-            request, f"Fetching tweets (Task: {result.task_id} Status: {result.status}"
-        )
-        return HttpResponseRedirect("../")
-
-    def update_following_button(self, account):
-        download_view = "admin:twitter_update_following"
-        download_url = reverse(download_view, args=[account.twitter_id])
-        return format_html('<a href="{}">Update Following</a>', download_url)
-
-    def update_followers_button(self, account):
-        download_view = "admin:twitter_update_followers"
-        download_url = reverse(download_view, args=[account.twitter_id])
-        return format_html('<a href="{}">Update Followers</a>', download_url)
-
-    def update_tweets_button(self, account):
-        download_view = "admin:twitter_update_tweets"
-        download_url = reverse(download_view, args=[account.twitter_id])
-        return format_html('<a href="{}">Update Tweets (Last 100)</a>', download_url)
+    def response_change(self, request, obj):
+        if "_fetch-tweets" in request.POST:
+            result = update_tasks.update_tweets.delay(obj.twitter_id)
+            self.message_user(
+                request,
+                f"Fetching tweets (Task: {result.task_id} Status: {result.status}",
+            )
+            return HttpResponseRedirect("..")
+        if "_fetch-followers" in request.POST:
+            result = update_tasks.update_followers.delay(obj.twitter_id)
+            self.message_user(
+                request,
+                f"Fetching followers (Task: {result.task_id} Status: {result.status}",
+            )
+            return HttpResponseRedirect("..")
+        if "_fetch-following" in request.POST:
+            result = update_tasks.update_following.delay(obj.twitter_id)
+            self.message_user(
+                request,
+                f"Fetching following (Task: {result.task_id} Status: {result.status}",
+            )
+            return HttpResponseRedirect("..")
+        return super().response_change(request, obj)
 
     def get_readonly_fields(self, request, account=None):
         if account:  # editing an existing object

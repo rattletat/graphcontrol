@@ -1,0 +1,10 @@
+{% extends 'admin/change_form.html' %}
+
+{% block submit_buttons_bottom %}
+    {{ block.super }}
+    <div class="submit-row">
+            <input type="submit" value="Fetch All Tweets" name="_fetch-tweets">
+            <input type="submit" value="Fetch All Followers" name="_fetch-followers">
+            <input type="submit" value="Fetch All Following" name="_fetch-following">
+    </div>
+{% endblock %}

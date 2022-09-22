@@ -13,21 +13,41 @@ def determine_API_version(handle):
 
 
 def get_user_tweets(
-    handle, user_id, tweet_fields=["created_at", "public_metrics"], count=10
+    handle,
+    user_id,
+    limit,
+    tweet_fields=["created_at", "public_metrics"],
 ):
     """Returns the ten most recent tweets of a specified user"""
     if handle.api_version == handle.APIVersion.V1:
-        tweets = handle.api.user_timeline(user_id=user_id, count=count)
+        # tweets = handle.api.user_timeline(user_id=user_id, count=count)
+        tweets = list(
+            tweepy.Cursor(
+                handle.api.user_timeline,
+                user_id=user_id,
+                trim_user=True,
+                tweet_mode="extended",
+            ).items(limit)
+        )
     elif handle.api_version == handle.APIVersion.V2:
-        tweets = handle.api.get_users_tweets(
-            id=user_id, tweet_fields=tweet_fields, user_auth=True
-        ).data
+        # tweets = handle.api.get_users_tweets(
+        #     id=user_id, tweet_fields=tweet_fields, user_auth=True
+        # ).data
+        tweets = list(
+            tweepy.Paginator(
+                handle.api.get_users_tweets,
+                id=user_id,
+                tweet_fields=tweet_fields,
+                user_auth=True,
+                limit=limit,
+            ).flatten()
+        )
     else:
         raise ValueError("Specified version invalid:", handle.api_version)
     return [
         {
             "id": str(tweet.id),
-            "text": tweet.text,
+            "text": tweet.text if hasattr(tweet, "text") else tweet.full_text,
             "created_at": tweet.created_at,
             "like_count": tweet.favorite_count
             if hasattr(tweet, "favorite_count")
@@ -88,7 +108,7 @@ def like_tweet(handle, tweet_id):
         raise ValueError("Specified version invalid:", handle.api_version)
 
 
-def get_following(handle, user_id):
+def get_following(handle, user_id, limit):
     """Returns a list of users the specified user ID is following."""
     if handle.api_version == handle.APIVersion.V1:
         data = list(
@@ -98,7 +118,7 @@ def get_following(handle, user_id):
                 include_user_entities=False,
                 skip_status=True,
                 count=200,
-            ).items()
+            ).items(limit)
         )
     elif handle.api_version == handle.APIVersion.V2:
         data = list(
@@ -108,6 +128,7 @@ def get_following(handle, user_id):
                 user_fields=["description"],
                 max_results=1000,
                 user_auth=True,
+                limit=limit,
             ).flatten()
         )
     else:
@@ -126,7 +147,7 @@ def get_following(handle, user_id):
     ]
 
 
-def get_followers(handle, user_id):
+def get_followers(handle, user_id, limit):
     """Returns a list of users who are followers of the specified user."""
     if handle.api_version == handle.APIVersion.V1:
         data = list(
@@ -136,7 +157,7 @@ def get_followers(handle, user_id):
                 include_user_entities=False,
                 skip_status=True,
                 count=200,
-            ).items()
+            ).items(limit)
         )
     elif handle.api_version == handle.APIVersion.V2:
         data = list(
@@ -146,6 +167,7 @@ def get_followers(handle, user_id):
                 user_fields=["description"],
                 max_results=1000,
                 user_auth=True,
+                limit=limit,
             ).flatten()
         )
     else:
