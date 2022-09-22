@@ -35,7 +35,7 @@ def fetch_random_user_tweets(limit=1000):
     Returns list of fetched Tweet ids."""
     random_account = Account.objects.order_by("?")[0]
     try:
-        update.update_tweets.delay(random_account.twitter_id, limit=limit)
+        update.update_tweets.run(random_account.twitter_id, limit=limit)
     except tweepy_errors.Unauthorized:
         pass
 
@@ -46,7 +46,7 @@ def fetch_random_user_followers(limit=1000):
     Returns list of fetched Tweet ids."""
     random_account = Account.objects.order_by("?")[0]
     try:
-        update.update_followers.delay(random_account.twitter_id, limit=limit)
+        update.update_followers.run(random_account.twitter_id, limit=limit)
     except tweepy_errors.Unauthorized:
         pass
 
@@ -57,7 +57,7 @@ def fetch_random_user_following(limit=1000):
     Returns list of fetched Tweet ids."""
     random_account = Account.objects.order_by("?")[0]
     try:
-        update.update_following.delay(random_account.twitter_id, limit=limit)
+        update.update_following.run(random_account.twitter_id, limit=limit)
     except tweepy_errors.Unauthorized:
         pass
 
@@ -69,13 +69,14 @@ def fetch_oldest_user_tweets(limit=1000):
     Returns list of fetched Tweet ids."""
     oldest_account = (
         Account.objects.order_by("-created")
-        .filter(tweets=None, handle__isnull=True)
+        .filter(tweets=None, handle__isnull=True, private=False)
         .first()
     )
     try:
-        update.update_tweets.delay(oldest_account.twitter_id, limit=limit)
+        update.update_tweets.run(oldest_account.twitter_id, limit=limit)
     except tweepy_errors.Unauthorized:
-        pass
+        oldest_account.private = True
+        oldest_account.save(refresh=False)
 
 
 @celery_app.task(name="Fetch Oldest User Following", max_retries=1)
@@ -85,13 +86,14 @@ def fetch_oldest_user_following(limit=1000):
     Returns list of fetched Tweet ids."""
     oldest_account = (
         Account.objects.order_by("-created")
-        .filter(following=None, handle__isnull=True)
+        .filter(following=None, handle__isnull=True, private=False)
         .first()
     )
     try:
-        update.update_following.delay(oldest_account.twitter_id, limit=limit)
+        update.update_following.run(oldest_account.twitter_id, limit=limit)
     except tweepy_errors.Unauthorized:
-        pass
+        oldest_account.private = True
+        oldest_account.save(refresh=False)
 
 
 @celery_app.task(name="Fetch Oldest User Followers", max_retries=1)
@@ -101,10 +103,11 @@ def fetch_oldest_user_followers(limit=1000):
     Returns list of fetched Tweet ids."""
     oldest_account = (
         Account.objects.order_by("-created")
-        .filter(following=None, handle__isnull=True)
+        .filter(following=None, handle__isnull=True, private=False)
         .first()
     )
     try:
-        update.update_followers.delay(oldest_account.twitter_id, limit=limit)
+        update.update_followers.run(oldest_account.twitter_id, limit=limit)
     except tweepy_errors.Unauthorized:
-        pass
+        oldest_account.private = True
+        oldest_account.save(refresh=False)

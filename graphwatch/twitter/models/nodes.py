@@ -17,6 +17,7 @@ class Account(Node):
     following = models.ManyToManyField(
         "self", related_name="followers", blank=True, symmetrical=False
     )
+    private = models.BooleanField(default=False)
 
     def save(self, refresh=True, *args, **kwargs):
         if self._state.adding and refresh:
