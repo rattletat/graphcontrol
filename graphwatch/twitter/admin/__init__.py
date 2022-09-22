@@ -32,7 +32,7 @@ class AccountAdmin(admin.ModelAdmin):
         "name",
         "view_tweets_link",
         # "view_following_link",
-        "view_followers_link",
+        # "view_followers_link",
         "get_bot_status",
     ]
     list_filter = [IsBotFilter]
@@ -96,7 +96,7 @@ class AccountAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.annotate(
-            follower_count=Count("followers", distinct=True),
+            # follower_count=Count("followers", distinct=True),
             # following_count=Count("following", distinct=True),
             tweet_count=Count("tweets", distinct=True),
         )
