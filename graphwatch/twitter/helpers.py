@@ -209,7 +209,7 @@ def unfollow_user(handle, user_id):
 def tweet_text(handle, text):
     """Unfollows the specified tweet using the handle account"""
     if handle.api_version == handle.APIVersion.V1:
-        return handle.api.create_tweet(status=text)
+        return handle.api.update_status(status=text)
     elif handle.api_version == handle.APIVersion.V2:
         return handle.api.create_tweet(text=text, user_auth=True)
     else:
