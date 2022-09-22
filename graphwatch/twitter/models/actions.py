@@ -85,10 +85,10 @@ class TweetAction(TwitterAction):
         return Account.objects.none()
 
     def execute(self):
-        action.unfollow_user_task.apply_async(
+        action.tweet_text_task.apply_async(
             kwargs={
-                "follower_id": self.source.real_instance.twitter_id,
-                "following_id": self.target.real_instance.twitter_id,
+                "account_id": self.source.real_instance.twitter_id,
+                "text": self.text,
             },
         )
 
