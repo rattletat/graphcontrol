@@ -126,7 +126,7 @@ def get_following(handle, user_id, limit):
                 handle.api.get_users_following,
                 id=user_id,
                 user_fields=["description"],
-                max_results=1000,
+                max_results=200,
                 user_auth=True,
                 limit=limit,
             ).flatten()
@@ -165,7 +165,7 @@ def get_followers(handle, user_id, limit):
                 handle.api.get_users_followers,
                 id=user_id,
                 user_fields=["description"],
-                max_results=1000,
+                max_results=200,
                 user_auth=True,
                 limit=limit,
             ).flatten()

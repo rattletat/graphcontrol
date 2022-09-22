@@ -68,7 +68,7 @@ def fetch_oldest_user_tweets(limit=1000):
     oldest real twitter user with zero tweets.
     Returns list of fetched Tweet ids."""
     oldest_account = (
-        Account.objects.order_by("created")
+        Account.objects.order_by("-created")
         .filter(tweets=None, handle__isnull=True)
         .first()
     )
@@ -84,7 +84,7 @@ def fetch_oldest_user_following(limit=1000):
     oldest real twitter user with zero follows.
     Returns list of fetched Tweet ids."""
     oldest_account = (
-        Account.objects.order_by("created")
+        Account.objects.order_by("-created")
         .filter(following=None, handle__isnull=True)
         .first()
     )
@@ -100,7 +100,7 @@ def fetch_oldest_user_followers(limit=1000):
     oldest real twitter user with zero followers.
     Returns list of fetched Tweet ids."""
     oldest_account = (
-        Account.objects.order_by("created")
+        Account.objects.order_by("-created")
         .filter(following=None, handle__isnull=True)
         .first()
     )
