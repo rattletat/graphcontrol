@@ -11,6 +11,7 @@ django-celery-beat==2.3.0  # https://github.com/celery/django-celery-beat
 flower==1.1.0  # https://github.com/mher/flower
 tweepy==4.10.0  # https://github.com/tweepy/tweepy
 django-polymorphic==3.1.0  # https://github.com/django-polymorphic
+supervisor==4.2.4
 
 # Django
 # ------------------------------------------------------------------------------

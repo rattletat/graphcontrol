@@ -1,7 +1,6 @@
 from dal import autocomplete
 from django.contrib.contenttypes.models import ContentType
-
-from graphwatch.twitter.models import Account
+from django.db.models import Q
 
 from .models import Node
 
@@ -9,14 +8,16 @@ from .models import Node
 class MonitorSourceSelect(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         """Customize the queryset for this class view"""
-
+        print(self.request)
+        print(self.forwarded)
         event_ctype_id = self.forwarded.get("event_type", None)
         if not self.request.user.is_authenticated or not event_ctype_id:
             return Node.objects.none()
         event_ctype = ContentType.objects.get(id=event_ctype_id)
         event_model = event_ctype.model_class()
-        source_model = event_model.source_model
-        queryset = Node.objects.instance_of(source_model)
+        queryset = Node.objects.filter(
+            Q(instance_of=event_model.source_model) | Q(group__isnull=False)
+        )
         if self.q:
             queryset = list(
                 filter(lambda n: self.q.lower() in str(n).lower(), queryset.all())
@@ -27,15 +28,17 @@ class MonitorSourceSelect(autocomplete.Select2QuerySetView):
 class MonitorTargetSelect(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         """Customize the queryset for this class view"""
-
+        print(self.request)
+        print(self.forwarded)
         event_ctype_id = self.forwarded.get("event_type", None)
         if not self.request.user.is_authenticated or not event_ctype_id:
             return Node.objects.none()
 
         event_ctype = ContentType.objects.get(id=event_ctype_id)
         event_model = event_ctype.model_class()
-        target_model = event_model.target_model
-        queryset = Node.objects.instance_of(target_model)
+        queryset = Node.objects.filter(
+            Q(instance_of=event_model.target_model) | Q(group__isnull=False)
+        )
         if self.q:
             queryset = list(
                 filter(lambda n: self.q.lower() in str(n).lower(), queryset.all())
@@ -45,10 +48,16 @@ class MonitorTargetSelect(autocomplete.Select2QuerySetView):
 
 class ActionSourceSelect(autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        if not self.request.user.is_authenticated:
+        action_ctype = self.forwarded.get("polymorphic_ctype", None)
+        if not self.request.user.is_authenticated or not action_ctype:
             return Node.objects.none()
 
-        queryset = Account.objects.filter(handle__isnull=False).all()
+        action_ctype = ContentType.objects.get(id=action_ctype)
+        action_model = action_ctype.model_class()
+        queryset = action_model.get_source_queryset() | Node.objects.filter(
+            group__isnull=False
+        )
+
         if self.q:
             queryset = list(
                 filter(lambda n: self.q.lower() in str(n).lower(), queryset)
@@ -59,14 +68,17 @@ class ActionSourceSelect(autocomplete.Select2QuerySetView):
 class ActionTargetSelect(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         """Customize the queryset for this class view"""
-        print("Target alive")
+        action_ctype = self.forwarded.get("polymorphic_ctype", None)
         print(self.request)
         print(self.forwarded)
-
-        if not self.request.user.is_authenticated:
+        if not self.request.user.is_authenticated or not action_ctype:
             return Node.objects.none()
 
-        queryset = Account.objects.all()
+        action_ctype = ContentType.objects.get(id=action_ctype)
+        action_model = action_ctype.model_class()
+        queryset = action_model.get_target_queryset() | Node.objects.filter(
+            group__isnull=False
+        )
         if self.q:
             queryset = list(
                 filter(lambda n: self.q.lower() in str(n).lower(), queryset)

@@ -31,3 +31,9 @@ class ActionForm(forms.ModelForm):
         self.fields["target"].queryset = Node.objects.filter(
             polymorphic_ctype=target_ctype
         )
+
+
+class GroupForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["nodes"].queryset = self.instance.get_nodes_queryset()

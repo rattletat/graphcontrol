@@ -6,6 +6,14 @@ from model_utils.models import UUIDModel
 from config import celery_app
 from graphwatch.core.models import Node
 
+from .groups import AccountGroup
+
+# from model_utils import Choices
+# from django_celery_results.models import TaskResult
+
+
+# from celery.result import AsyncResult
+
 
 class Account(Node):
     twitter_id = models.CharField(
@@ -85,6 +93,15 @@ class Handle(UUIDModel):
             )
         super().save(*args, **kwargs)
 
+    def __str__(self):
+        return " ".join(
+            [
+                "Verified" if self.verified else "Unverified",
+                "V1" if self.api_version == Handle.APIVersion.V1 else "V2",
+                f"handle by {self.account}" if self.account else "handle",
+            ]
+        )
+
     class Meta:
         unique_together = ("api_key", "access_token", "api_version")
 
@@ -96,8 +113,48 @@ class Tweet(Node):
     created_at = models.DateTimeField()
     like_count = models.PositiveIntegerField(default=0)
 
+    @classmethod
+    def create_from_status(cls, status: tweepy.models.Status):
+        author = Account.objects.get(twitter_id=status.user.id_str)
+        tweet = Tweet(
+            author=author,
+            twitter_id=status.id_str,
+            text=status.text,
+            created_at=status.created_at,
+            like_count=status.favorite_count,
+        )
+        tweet.save()
+        return tweet
+
     def __str__(self):
         return f"Tweet by {self.author.username}: {truncatechars(self.text, 100)}"
 
     class Meta:
         ordering = ["-created_at"]
+
+
+class Stream(UUIDModel):
+    handle = models.OneToOneField(
+        Handle, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    group = models.ForeignKey(AccountGroup, on_delete=models.CASCADE)
+    task_id = models.UUIDField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Stream using {self.handle} following {self.group}"
+
+    def _start(self):
+        self._stop()
+        task = celery_app.send_task("Stream Tweets", [self.id])
+        self.task_id = task.id
+        self.save()
+        return task
+
+    def _stop(self):
+        if self.task_id:
+            task = celery_app.AsyncResult(self.task_id)
+            task.revoke(terminate=True)
+            self.task_id = None
+            self.save()
+            return task
+        return None

@@ -13,6 +13,7 @@ from ..helpers import (
     get_user_tweets,
     get_username,
 )
+from ..models import Account, Handle, Tweet
 from ..models.events import (
     DescriptionChangeEvent,
     FollowEvent,
@@ -21,7 +22,6 @@ from ..models.events import (
     UnfollowEvent,
     UsernameChangeEvent,
 )
-from ..models.nodes import Account, Handle, Tweet
 
 
 @celery_app.task(name="Update Twitter Handle", max_retries=1)

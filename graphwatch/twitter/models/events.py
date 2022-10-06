@@ -1,6 +1,6 @@
 from graphwatch.core.models import Event
 
-from .nodes import Account
+from .nodes import Account, Tweet
 
 
 class TwitterEvent(Event):
@@ -9,6 +9,7 @@ class TwitterEvent(Event):
 
 class TweetEvent(TwitterEvent):
     source_model = Account
+    target_model = Tweet
 
     def __str__(self):
         return f'{self.source} tweets "{self.target.real_instance.text}"'

@@ -1,3 +1,4 @@
+from config import celery_app
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.shortcuts import reverse
@@ -11,10 +12,10 @@ from polymorphic.admin import (
 
 from django.db.models import Count
 
-from ..models import Account, Handle, Tweet, actions, events
+from ..models import Account, Handle, Stream, Tweet, actions, events, groups
 from ..tasks import update as update_tasks
 from .filters import IsBotFilter  # , IsMonitoredFilter
-from .forms import ActionForm
+from .forms import ActionForm, GroupForm
 from .inlines import HandleInline, TweetInline  # , FollowingInline
 from .mixins import ReadOnlyAdmin
 
@@ -26,22 +27,64 @@ class HandleAdmin(admin.ModelAdmin):
     readonly_fields = ["account", "api_version", "verified"]
 
 
+@admin.register(Stream)
+class StreamAdmin(admin.ModelAdmin):
+    fields = ["handle", "group", "_get_task_status"]
+    readonly_fields = ["_get_task_status"]
+    change_form_template = "admin/stream_changeform.html"
+    # filter_horizontal = ["follow"]
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields["handle"].queryset = Handle.objects.filter(
+            api_version=Handle.APIVersion.V1
+        )
+        return form
+
+    @admin.display(description="Status")
+    def _get_task_status(self, obj):
+        task = celery_app.AsyncResult(obj.task_id)
+        return task.status
+
+    def response_change(self, request, obj):
+        if "_start-stream" in request.POST:
+            task = obj._start()
+            self.message_user(
+                request,
+                f"Stream started (Task: {task.task_id} Status: {task.status}",
+            )
+            return HttpResponseRedirect("..")
+        if "_stop-stream" in request.POST:
+            task = obj._stop()
+            if task:
+                self.message_user(
+                    request,
+                    f"Stream stopped (Task: {task.task_id} Status: {task.status}",
+                )
+            else:
+                self.message_user(request, "No task to stop.")
+            return HttpResponseRedirect("..")
+        return super().response_change(request, obj)
+
+
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "view_tweets_link",
-        # "view_following_link",
-        # "view_followers_link",
+        "view_following_link",
+        "view_followers_link",
         "get_bot_status",
     ]
     list_filter = [IsBotFilter]
     fields = [
-        "username",
+        "view_twitter_profile",
         "twitter_id",
         "description",
+        "get_bot_status",
     ]
     readonly_fields = [
+        "view_twitter_profile",
         "twitter_id",
         "description",
         "get_bot_status",
@@ -84,21 +127,28 @@ class AccountAdmin(admin.ModelAdmin):
         if not account:
             return []
         inlines = super().get_inline_instances(request, account)
-        if hasattr(account, "handle"):
-            inlines.insert(0, HandleInline(self.model, self.admin_site))
         # if account.monitors.exists():
         #     inlines.insert(0, MonitorInline(self.model, self.admin_site))
         if account.tweets.exists():
             inlines.insert(0, TweetInline(self.model, self.admin_site))
+        if hasattr(account, "handle"):
+            inlines.insert(0, HandleInline(self.model, self.admin_site))
 
         return inlines
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.annotate(
-            # follower_count=Count("followers", distinct=True),
-            # following_count=Count("following", distinct=True),
+            follower_count=Count("followers", distinct=True),
+            following_count=Count("following", distinct=True),
             tweet_count=Count("tweets", distinct=True),
+        )
+
+    @admin.display(description="Username")
+    def view_twitter_profile(self, account):
+        return format_html(
+            "<a href='https://twitter.com/{username}'>{username}</a>",
+            username=account.username,
         )
 
     @admin.display(description="# Tweets", ordering="-tweet_count")
@@ -146,7 +196,7 @@ class AccountAdmin(admin.ModelAdmin):
 
 
 @admin.register(Tweet)
-class TweetAdmin(admin.ModelAdmin):
+class TweetAdmin(ReadOnlyAdmin):
     search_fields = ["author__username", "author__name", "text"]
     list_display = ["get_author_name", "created_at", "text", "like_count"]
     ordering = ["-created_at"]
@@ -257,3 +307,29 @@ class TwitterActionParentAdmin(PolymorphicParentModelAdmin):
         actions.UnfollowAction,
         actions.TweetAction,
     )
+
+
+class TwitterGroupChildAdmin(PolymorphicChildModelAdmin):
+    """Base admin class for all child models"""
+
+    base_model = groups.TwitterGroup
+    base_form = GroupForm
+    filter_horizontal = ["nodes"]
+
+    def has_module_permission(self, request):
+        return False
+
+
+@admin.register(groups.AccountGroup)
+class AccountGroupAdmin(TwitterGroupChildAdmin):
+    base_model = groups.AccountGroup
+
+
+@admin.register(groups.TwitterGroup)
+class TwitterGroupParentAdmin(PolymorphicParentModelAdmin):
+
+    base_model = groups.AccountGroup
+    list_display = ["__str__"]
+    list_filter = (PolymorphicChildModelFilter,)
+    polymorphic_list = True
+    child_models = (groups.AccountGroup,)

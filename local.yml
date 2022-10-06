@@ -15,7 +15,7 @@ services:
     depends_on:
       - postgres
       - redis
-      - mailhog
+      # - mailhog
     volumes:
       - .:/app:z
     env_file:
@@ -37,28 +37,28 @@ services:
     env_file:
       - ./.envs/.local/.postgres
 
-  docs:
-    image: graphwatch_local_docs
-    container_name: graphwatch_local_docs
-    # platform: linux/x86_64
-    build:
-      context: .
-      dockerfile: ./compose/local/docs/Dockerfile
-    env_file:
-      - ./.envs/.local/.docs
-    volumes:
-      - ./docs:/docs:z
-      - ./config:/app/config:z
-      - ./graphwatch:/app/graphwatch:z
-    ports:
-      - "9000:9000"
-    command: /start-docs
+  # docs:
+  #   image: graphwatch_local_docs
+  #   container_name: graphwatch_local_docs
+  #   # platform: linux/x86_64
+  #   build:
+  #     context: .
+  #     dockerfile: ./compose/local/docs/Dockerfile
+  #   env_file:
+  #     - ./.envs/.local/.docs
+  #   volumes:
+  #     - ./docs:/docs:z
+  #     - ./config:/app/config:z
+  #     - ./graphwatch:/app/graphwatch:z
+  #   ports:
+  #     - "9000:9000"
+  #   command: /start-docs
 
-  mailhog:
-    image: mailhog/mailhog:v1.0.0
-    container_name: graphwatch_local_mailhog
-    ports:
-      - "8025:8025"
+  # mailhog:
+  #   image: mailhog/mailhog:v1.0.0
+  #   container_name: graphwatch_local_mailhog
+  #   ports:
+  #     - "8025:8025"
 
   redis:
     image: redis:6
@@ -71,7 +71,7 @@ services:
     depends_on:
       - redis
       - postgres
-      - mailhog
+      # - mailhog
     ports: []
     command: /start-celeryworker
 
@@ -82,7 +82,7 @@ services:
     depends_on:
       - redis
       - postgres
-      - mailhog
+      # - mailhog
     ports: []
     command: /start-celerybeat
 
