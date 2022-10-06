@@ -278,3 +278,4 @@ graphwatch/media/
 .envs/*
 !.envs/.local/
 certs/*
+db

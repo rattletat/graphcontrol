@@ -1,9 +1,9 @@
 version: '3'
 
-volumes:
-  production_postgres_data: {}
-  production_postgres_data_backups: {}
-  production_traefik: {}
+# volumes:
+  # production_postgres_data: {}
+  # production_postgres_data_backups: {}
+  # production_traefik: {}
 
 services:
   django: &django
@@ -28,8 +28,8 @@ services:
     image: graphwatch_production_postgres
     container_name: graphwatch-postgres
     volumes:
-      - production_postgres_data:/var/lib/postgresql/data:Z
-      - production_postgres_data_backups:/backups:z
+      - ./db/data/_data:/var/lib/postgresql/data:Z
+      - ./db/backups:/backups:z
     env_file:
       - ./.envs/.production/.postgres
 
