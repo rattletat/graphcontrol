@@ -93,6 +93,7 @@ class AccountAdmin(admin.ModelAdmin):
     list_per_page = 10
     save_as_continue = False
     change_form_template = "admin/account_changeform.html"
+    add_form_template = "admin/account_addform.html"
 
     def response_change(self, request, obj):
         if "_fetch-tweets" in request.POST:
@@ -118,10 +119,10 @@ class AccountAdmin(admin.ModelAdmin):
             return HttpResponseRedirect("..")
         return super().response_change(request, obj)
 
-    def get_readonly_fields(self, request, account=None):
+    def get_fields(self, request, account=None):
         if account:  # editing an existing object
-            return self.readonly_fields + ["username"]
-        return self.readonly_fields
+            return self.fields
+        return ["username"]
 
     def get_inline_instances(self, request, account=None):
         if not account:
