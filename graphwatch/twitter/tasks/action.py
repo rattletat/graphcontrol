@@ -1,7 +1,6 @@
-import helpers
-
 from config import celery_app
 
+from .. import helpers
 from ..models import Account
 
 
