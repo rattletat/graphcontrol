@@ -32,6 +32,7 @@ class StreamAdmin(admin.ModelAdmin):
     fields = ["handle", "group", "_get_task_status"]
     readonly_fields = ["_get_task_status"]
     change_form_template = "admin/stream_changeform.html"
+    add_form_template = "admin/stream_addform.html"
     # filter_horizontal = ["follow"]
 
     def get_form(self, request, obj=None, **kwargs):
