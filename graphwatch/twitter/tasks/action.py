@@ -1,7 +1,7 @@
 from config import celery_app
 
+from .. import helpers
 from ..models import Account
-from . import helpers
 
 
 @celery_app.task(name="Like Tweet", max_retries=1)
