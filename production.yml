@@ -54,7 +54,6 @@ services:
   celeryworker:
     <<: *django
     image: graphwatch_production_celeryworker
-    container_name: graphwatch-celeryworker
     command: /start-celeryworker
 
   celerybeat:
