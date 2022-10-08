@@ -98,7 +98,7 @@ def get_user_id(handle):
         raise ValueError("Specified version invalid:", handle.api_version)
 
 
-def like_tweet(handle, tweet_id):
+def like(handle, tweet_id):
     """Likes the specified tweet using the handle account"""
     if handle.api_version == handle.APIVersion.V1:
         return handle.api.create_favorite(tweet_id)
@@ -186,8 +186,8 @@ def get_followers(handle, user_id, limit):
     ]
 
 
-def follow_user(handle, user_id):
-    """Follows the specified tweet using the handle account"""
+def follow(handle, user_id):
+    """Follows the specified user"""
     if handle.api_version == handle.APIVersion.V1:
         return handle.api.create_friendship(user_id=user_id)
     elif handle.api_version == handle.APIVersion.V2:
@@ -196,8 +196,8 @@ def follow_user(handle, user_id):
         raise ValueError("Specified version invalid:", handle.api_version)
 
 
-def unfollow_user(handle, user_id):
-    """Unfollows the specified tweet using the handle account"""
+def unfollow(handle, user_id):
+    """Unfollows the specified user"""
     if handle.api_version == handle.APIVersion.V1:
         return handle.api.destroy_friendship(user_id=user_id)
     elif handle.api_version == handle.APIVersion.V2:
@@ -206,11 +206,21 @@ def unfollow_user(handle, user_id):
         raise ValueError("Specified version invalid:", handle.api_version)
 
 
-def tweet_text(handle, text):
-    """Unfollows the specified tweet using the handle account"""
+def tweet(handle, text):
+    """Tweets the specified text"""
     if handle.api_version == handle.APIVersion.V1:
         return handle.api.update_status(status=text)
     elif handle.api_version == handle.APIVersion.V2:
         return handle.api.create_tweet(text=text, user_auth=True)
+    else:
+        raise ValueError("Specified version invalid:", handle.api_version)
+
+
+def retweet(handle, tweet_id):
+    """Retweets the specified tweet."""
+    if handle.api_version == handle.APIVersion.V1:
+        return handle.api.retweet(id=tweet_id)
+    elif handle.api_version == handle.APIVersion.V2:
+        return handle.api.retweet(tweet_id=tweet_id, user_auth=True)
     else:
         raise ValueError("Specified version invalid:", handle.api_version)

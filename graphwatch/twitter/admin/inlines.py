@@ -30,11 +30,16 @@ class TweetActionInline(ActionInline):
     model = actions.TweetAction
 
 
+class RetweetActionInline(ActionInline):
+    model = actions.RetweetAction
+
+
 ACTION_INLINES = (
     LikeActionInline,
     FollowActionInline,
     UnfollowActionInline,
     TweetActionInline,
+    RetweetActionInline,
 )
 
 

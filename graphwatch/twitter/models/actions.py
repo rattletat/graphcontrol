@@ -23,7 +23,7 @@ class LikeAction(TwitterAction):
         return Node.objects.instance_of(Tweet)
 
     def execute(self, source, target):
-        action.like_tweet_task.apply_async(
+        action.like_task.apply_async(
             kwargs={
                 "account_id": source.twitter_id,
                 "tweet_id": target.twitter_id,
@@ -102,7 +102,7 @@ class TweetAction(TwitterAction):
         return Node.objects.none()
 
     def execute(self, source, target):
-        action.tweet_text_task.apply_async(
+        action.tweet_task.apply_async(
             kwargs={
                 "account_id": source.twitter_id,
                 "text": self.text,
@@ -112,3 +112,29 @@ class TweetAction(TwitterAction):
     def __str__(self):
         source = self.source.real_instance if self.source else "______"
         return f"{source} tweets '{self.text}'"
+
+
+class RetweetAction(TwitterAction):
+    source_model = Account
+    target_model = Tweet
+
+    @staticmethod
+    def get_source_queryset():
+        return Node.objects.instance_of(Account).filter(account__handle__isnull=False)
+
+    @staticmethod
+    def get_target_queryset():
+        return Node.objects.instance_of(Tweet)
+
+    def execute(self, source, target):
+        action.retweet_task.apply_async(
+            kwargs={
+                "account_id": source.twitter_id,
+                "tweet_id": target.twitter_id,
+            },
+        )
+
+    def __str__(self):
+        source = self.source.real_instance if self.source else "______"
+        target = self.target.real_instance if self.target else "______"
+        return f"{source} retweets '{target}'"
