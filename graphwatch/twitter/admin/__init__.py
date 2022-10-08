@@ -29,6 +29,7 @@ class HandleAdmin(admin.ModelAdmin):
 
 @admin.register(Stream)
 class StreamAdmin(admin.ModelAdmin):
+    list_display = ["handle", "group", "_get_task_status"]
     fields = ["handle", "group", "_get_task_status"]
     readonly_fields = ["_get_task_status"]
     change_form_template = "admin/stream_changeform.html"
