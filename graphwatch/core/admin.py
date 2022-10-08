@@ -7,14 +7,13 @@ from rest_framework.authtoken.models import TokenProxy
 
 from graphwatch.twitter.admin import inlines as twitter_inlines
 
-from .forms import ActionInlineForm, MonitorForm
+from .forms import MonitorForm
 from .models import Action, Monitor
 
 
 class ActionInline(polyadmin.StackedPolymorphicInline):
     model = Action
     child_inlines = twitter_inlines.ACTION_INLINES
-    form = ActionInlineForm
     fk_name = "event_monitor"
 
 

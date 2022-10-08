@@ -33,8 +33,16 @@ class ActionInlineForm(forms.ModelForm):
         widgets = {
             "source": autocomplete.ModelSelect2(
                 url="action_source_autocomplete",
+                forward=["polymorphic_ctype"],
+                attrs={
+                    "data-placeholder": "Select source",
+                },
             ),
             "target": autocomplete.ModelSelect2(
                 url="action_target_autocomplete",
+                forward=["polymorphic_ctype"],
+                attrs={
+                    "data-placeholder": "Select target",
+                },
             ),
         }

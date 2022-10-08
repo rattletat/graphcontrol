@@ -3,31 +3,31 @@ from django.urls import reverse
 from django.utils.html import format_html
 from polymorphic.admin import StackedPolymorphicInline
 
+from graphwatch.core.forms import ActionInlineForm
+
 from ..models import actions, nodes
 from .forms import TweetInlineForm  # , FollowingInlineForm
 from .mixins import ReadOnlyTabularInline
 
-# from graphwatch.core.forms import ActionInlineForm
+
+class ActionInline(StackedPolymorphicInline.Child):
+    form = ActionInlineForm
 
 
-class LikeActionInline(StackedPolymorphicInline.Child):
+class LikeActionInline(ActionInline):
     model = actions.LikeAction
-    # form = ActionInlineForm
 
 
-class FollowActionInline(StackedPolymorphicInline.Child):
+class FollowActionInline(ActionInline):
     model = actions.FollowAction
-    # form = ActionInlineForm
 
 
-class UnfollowActionInline(StackedPolymorphicInline.Child):
+class UnfollowActionInline(ActionInline):
     model = actions.UnfollowAction
-    # form = ActionInlineForm
 
 
-class TweetActionInline(StackedPolymorphicInline.Child):
+class TweetActionInline(ActionInline):
     model = actions.TweetAction
-    # form = ActionInlineForm
 
 
 ACTION_INLINES = (
