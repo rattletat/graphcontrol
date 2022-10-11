@@ -11,6 +11,7 @@ class TwitterAction(Action):
 
 
 class LikeAction(TwitterAction):
+    task = action.like_task
     source_model = Account
     target_model = Tweet
 
@@ -22,13 +23,8 @@ class LikeAction(TwitterAction):
     def get_target_queryset():
         return Node.objects.instance_of(Tweet)
 
-    def execute(self, source, target):
-        action.like_task.apply_async(
-            kwargs={
-                "account_id": source.twitter_id,
-                "tweet_id": target.twitter_id,
-            },
-        )
+    def get_task_kwargs(self, source: Account, target: Tweet):
+        return {"account_id": source.twitter_id, "tweet_id": target.twitter_id}
 
     def __str__(self):
         source = self.source.real_instance if self.source else "______"
@@ -37,6 +33,7 @@ class LikeAction(TwitterAction):
 
 
 class FollowAction(TwitterAction):
+    task = action.follow_user_task
     source_model = Account
     target_model = Account
 
@@ -48,13 +45,8 @@ class FollowAction(TwitterAction):
     def get_target_queryset():
         return Node.objects.instance_of(Account)
 
-    def execute(self, source, target):
-        action.follow_user_task.apply_async(
-            kwargs={
-                "follower_id": source.twitter_id,
-                "following_id": target.twitter_id,
-            },
-        )
+    def get_task_kwargs(self, source, target):
+        return {"follower_id": source.twitter_id, "following_id": target.twitter_id}
 
     def __str__(self):
         source = self.source.real_instance if self.source else "______"
@@ -63,6 +55,7 @@ class FollowAction(TwitterAction):
 
 
 class UnfollowAction(TwitterAction):
+    task = action.unfollow_user_task
     source_model = Account
     target_model = Account
 
@@ -74,13 +67,8 @@ class UnfollowAction(TwitterAction):
     def get_target_queryset():
         return Node.objects.instance_of(Account)
 
-    def execute(self, source, target):
-        action.unfollow_user_task.apply_async(
-            kwargs={
-                "follower_id": source.twitter_id,
-                "following_id": target.twitter_id,
-            },
-        )
+    def get_task_kwargs(self, source, target):
+        return {"follower_id": source.twitter_id, "following_id": target.twitter_id}
 
     def __str__(self):
         source = self.source.real_instance if self.source else "______"
@@ -89,6 +77,7 @@ class UnfollowAction(TwitterAction):
 
 
 class TweetAction(TwitterAction):
+    task = action.tweet_task
     source_model = Account
     target_model = Tweet
     text = models.CharField("Tweet text", max_length=280)
@@ -101,13 +90,8 @@ class TweetAction(TwitterAction):
     def get_target_queryset():
         return Node.objects.none()
 
-    def execute(self, source, target):
-        action.tweet_task.apply_async(
-            kwargs={
-                "account_id": source.twitter_id,
-                "text": self.text,
-            },
-        )
+    def get_task_kwargs(self, source, target):
+        return {"account_id": source.twitter_id, "text": self.text}
 
     def __str__(self):
         source = self.source.real_instance if self.source else "______"
@@ -115,6 +99,7 @@ class TweetAction(TwitterAction):
 
 
 class RetweetAction(TwitterAction):
+    task = action.retweet_task
     source_model = Account
     target_model = Tweet
 
@@ -126,13 +111,8 @@ class RetweetAction(TwitterAction):
     def get_target_queryset():
         return Node.objects.instance_of(Tweet)
 
-    def execute(self, source, target):
-        action.retweet_task.apply_async(
-            kwargs={
-                "account_id": source.twitter_id,
-                "tweet_id": target.twitter_id,
-            },
-        )
+    def get_task_kwargs(self, source, target):
+        return {"account_id": source.twitter_id, "tweet_id": target.twitter_id}
 
     def __str__(self):
         source = self.source.real_instance if self.source else "______"

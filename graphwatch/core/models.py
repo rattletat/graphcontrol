@@ -1,6 +1,11 @@
+import itertools
+import random
+from datetime import timedelta
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 from model_utils.models import TimeStampedModel, UUIDModel
 from polymorphic.models import PolymorphicModel
 
@@ -134,6 +139,13 @@ class Action(Edge):
         on_delete=models.CASCADE,
         related_name="actions",
     )
+    min_delay = models.DurationField(default=timedelta)
+    max_delay = models.DurationField(default=timedelta)
+    min_nodes = models.PositiveIntegerField(default=1)
+    max_nodes = models.PositiveIntegerField(default=1)
+
+    def get_task_kwargs(self, source, target):
+        raise NotImplementedError
 
     def get_source_queryset(self):
         raise NotImplementedError
@@ -142,4 +154,25 @@ class Action(Edge):
         raise NotImplementedError
 
     def execute(self, source: Node, target: Node):
-        raise NotImplementedError
+        eta = (
+            timezone.now()
+            + self.min_delay
+            + random.random() * (self.max_delay - self.min_delay)
+        )
+        source_nodes = (
+            source.group.nodes.limit(
+                random.randrange(self.min_nodes, self.max_nodes + 1)
+            )
+            if source._is_group()
+            else [source]
+        )
+        target_nodes = (
+            target.group.nodes.limit(
+                random.randrange(self.min_nodes, self.max_nodes + 1)
+            )
+            if target._is_group()
+            else [target]
+        )
+        for source, target in itertools.product(source_nodes, target_nodes):
+            task_kwargs = self.get_task_kwargs(source, target)
+            self.task.async_apply(eta=eta, kwargs=task_kwargs)
