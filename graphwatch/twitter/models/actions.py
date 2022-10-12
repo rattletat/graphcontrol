@@ -27,9 +27,7 @@ class LikeAction(TwitterAction):
         return {"account_id": source.twitter_id, "tweet_id": target.twitter_id}
 
     def __str__(self):
-        source = self.source.real_instance if self.source else "______"
-        target = self.target.real_instance if self.target else "______"
-        return f"{source} likes {target}"
+        return super().__str__(verb="like")
 
 
 class FollowAction(TwitterAction):
@@ -49,9 +47,7 @@ class FollowAction(TwitterAction):
         return {"follower_id": source.twitter_id, "following_id": target.twitter_id}
 
     def __str__(self):
-        source = self.source.real_instance if self.source else "______"
-        target = self.target.real_instance if self.target else "______"
-        return f"{source} follows {target}"
+        return super().__str__(verb="follow")
 
 
 class UnfollowAction(TwitterAction):
@@ -71,9 +67,7 @@ class UnfollowAction(TwitterAction):
         return {"follower_id": source.twitter_id, "following_id": target.twitter_id}
 
     def __str__(self):
-        source = self.source.real_instance if self.source else "______"
-        target = self.target.real_instance if self.target else "______"
-        return f"{source} unfollows {target}"
+        return super().__str__(verb="unfollow")
 
 
 class TweetAction(TwitterAction):
@@ -94,8 +88,7 @@ class TweetAction(TwitterAction):
         return {"account_id": source.twitter_id, "text": self.text}
 
     def __str__(self):
-        source = self.source.real_instance if self.source else "______"
-        return f"{source} tweets '{self.text}'"
+        return super().__str__(verb="tweet")
 
 
 class RetweetAction(TwitterAction):
@@ -115,6 +108,4 @@ class RetweetAction(TwitterAction):
         return {"account_id": source.twitter_id, "tweet_id": target.twitter_id}
 
     def __str__(self):
-        source = self.source.real_instance if self.source else "______"
-        target = self.target.real_instance if self.target else "______"
-        return f"{source} retweets '{target}'"
+        return super().__str__(verb="retweet")
