@@ -31,3 +31,4 @@ drf-spectacular==0.23.1  # https://github.com/tfranzel/drf-spectacular
 django-celery-results==2.4.0  # https://github.com/celery/django-celery-results
 django-autocomplete-light==3.9.4
 djhacker==0.1.2
+django-durationwidget2==1.0.6

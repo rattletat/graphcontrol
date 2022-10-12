@@ -175,4 +175,4 @@ class Action(Edge):
         )
         for source, target in itertools.product(source_nodes, target_nodes):
             task_kwargs = self.get_task_kwargs(source, target)
-            self.task.async_apply(eta=eta, kwargs=task_kwargs)
+            self.task.apply_async(eta=eta, kwargs=task_kwargs)

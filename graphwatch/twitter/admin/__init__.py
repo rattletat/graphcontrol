@@ -4,11 +4,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import reverse
 from django.utils.html import format_html
 from django.utils.http import urlencode
-from polymorphic.admin import (
-    PolymorphicChildModelAdmin,
-    PolymorphicParentModelAdmin,
-    PolymorphicChildModelFilter,
-)
+import polymorphic.admin as polyadmin
 
 from django.db.models import Count
 
@@ -16,7 +12,7 @@ from ..models import Account, Handle, Stream, Tweet, actions, events, groups
 from ..tasks import update as update_tasks
 from .filters import IsBotFilter  # , IsMonitoredFilter
 from .forms import ActionForm, GroupForm
-from .inlines import HandleInline, TweetInline  # , FollowingInline
+from .inlines import HandleInline, TweetInline, TwitterGroupInline  # , FollowingInline
 from .mixins import ReadOnlyAdmin
 
 
@@ -70,7 +66,7 @@ class StreamAdmin(admin.ModelAdmin):
 
 
 @admin.register(Account)
-class AccountAdmin(admin.ModelAdmin):
+class AccountAdmin(polyadmin.PolymorphicInlineSupportMixin, admin.ModelAdmin):
     list_display = [
         "name",
         "view_tweets_link",
@@ -134,6 +130,8 @@ class AccountAdmin(admin.ModelAdmin):
         #     inlines.insert(0, MonitorInline(self.model, self.admin_site))
         if account.tweets.exists():
             inlines.insert(0, TweetInline(self.model, self.admin_site))
+        if account.groups.exists():
+            inlines.insert(0, TwitterGroupInline(self.model, self.admin_site))
         if hasattr(account, "handle"):
             inlines.insert(0, HandleInline(self.model, self.admin_site))
 
@@ -209,7 +207,7 @@ class TweetAdmin(ReadOnlyAdmin):
         return tweet.author.name
 
 
-class TwitterEventChildAdmin(PolymorphicChildModelAdmin):
+class TwitterEventChildAdmin(polyadmin.PolymorphicChildModelAdmin):
     """Base admin class for all child models"""
 
     base_model = events.TwitterEvent
@@ -249,13 +247,13 @@ class DescriptionChangeEventAdmin(NameChangeEventAdmin):
 
 
 @admin.register(events.TwitterEvent)
-class TwitterEventParentAdmin(PolymorphicParentModelAdmin, ReadOnlyAdmin):
+class TwitterEventParentAdmin(polyadmin.PolymorphicParentModelAdmin, ReadOnlyAdmin):
 
     base_model = events.TwitterEvent
     list_display = ["__str__", "created"]
     ordering = ["-created"]
     polymorphic_list = True
-    list_filter = (PolymorphicChildModelFilter,)
+    list_filter = (polyadmin.PolymorphicChildModelFilter,)
     list_per_page = 10
     child_models = (
         events.TweetEvent,
@@ -267,7 +265,7 @@ class TwitterEventParentAdmin(PolymorphicParentModelAdmin, ReadOnlyAdmin):
     )
 
 
-class TwitterActionChildAdmin(PolymorphicChildModelAdmin):
+class TwitterActionChildAdmin(polyadmin.PolymorphicChildModelAdmin):
     """Base admin class for all child models"""
 
     base_model = actions.TwitterAction
@@ -298,11 +296,11 @@ class TweetActionAdmin(UnfollowActionAdmin):
 
 
 @admin.register(actions.TwitterAction)
-class TwitterActionParentAdmin(PolymorphicParentModelAdmin):
+class TwitterActionParentAdmin(polyadmin.PolymorphicParentModelAdmin):
 
     base_model = actions.TwitterAction
     list_display = ["__str__"]
-    list_filter = (PolymorphicChildModelFilter,)
+    list_filter = (polyadmin.PolymorphicChildModelFilter,)
     polymorphic_list = True
     child_models = (
         actions.LikeAction,
@@ -312,7 +310,7 @@ class TwitterActionParentAdmin(PolymorphicParentModelAdmin):
     )
 
 
-class TwitterGroupChildAdmin(PolymorphicChildModelAdmin):
+class TwitterGroupChildAdmin(polyadmin.PolymorphicChildModelAdmin):
     """Base admin class for all child models"""
 
     base_model = groups.TwitterGroup
@@ -329,10 +327,10 @@ class AccountGroupAdmin(TwitterGroupChildAdmin):
 
 
 @admin.register(groups.TwitterGroup)
-class TwitterGroupParentAdmin(PolymorphicParentModelAdmin):
+class TwitterGroupParentAdmin(polyadmin.PolymorphicParentModelAdmin):
 
     base_model = groups.AccountGroup
     list_display = ["__str__"]
-    list_filter = (PolymorphicChildModelFilter,)
+    list_filter = (polyadmin.PolymorphicChildModelFilter,)
     polymorphic_list = True
     child_models = (groups.AccountGroup,)

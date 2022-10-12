@@ -1,5 +1,6 @@
 from dal import autocomplete  # , forward
 from django import forms
+from durationwidget.widgets import TimeDurationWidget
 
 from graphwatch.core.models import Action, Monitor
 
@@ -44,5 +45,11 @@ class ActionInlineForm(forms.ModelForm):
                 attrs={
                     "data-placeholder": "Select target",
                 },
+            ),
+            "min_delay": TimeDurationWidget(
+                show_days=False, show_hours=True, show_minutes=True, show_seconds=True
+            ),
+            "max_delay": TimeDurationWidget(
+                show_days=False, show_hours=True, show_minutes=True, show_seconds=True
             ),
         }

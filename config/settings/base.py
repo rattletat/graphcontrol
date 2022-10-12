@@ -80,6 +80,7 @@ THIRD_PARTY_APPS = [
     "polymorphic",
     "dal",
     "dal_select2",
+    "durationwidget",
 ]
 
 LOCAL_APPS = [
