@@ -176,3 +176,18 @@ class Action(Edge):
         for source, target in itertools.product(source_nodes, target_nodes):
             task_kwargs = self.get_task_kwargs(source, target)
             self.task.apply_async(eta=eta, kwargs=task_kwargs)
+
+    def __str__(self, verb=""):
+        if not self.source:
+            source = f"<{self.source_model.__name__}>"
+        elif self.source._is_group():
+            source = f"{self.min_nodes}-{self.max_nodes} {self.source.group.name}"
+        else:
+            source = str(self.source)
+        if not self.target:
+            target = f"<{self.target_model.__name__}>"
+        elif self.target._is_group():
+            target = f"{self.min_nodes}-{self.max_nodes} {self.target.group.name}"
+        else:
+            target = str(self.target)
+        return f"{source} {verb + 's'if self.max_nodes <= 1 else verb} {target}"
