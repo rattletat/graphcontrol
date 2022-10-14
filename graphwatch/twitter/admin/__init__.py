@@ -42,8 +42,11 @@ class StreamAdmin(admin.ModelAdmin):
 
     @admin.display(description="Status")
     def _get_task_status(self, obj):
-        task = celery_app.AsyncResult(obj.task_id)
-        return task.status
+        if obj.task_id:
+            task = celery_app.AsyncResult(obj.task_id)
+            return task.status
+        else:
+            return "Stopped"
 
     @admin.action(description="Start selected streams")
     def start_stream(modeladmin, request, queryset):
@@ -64,12 +67,9 @@ class StreamAdmin(admin.ModelAdmin):
             )
             return HttpResponseRedirect("..")
         if "_stop-stream" in request.POST:
-            task = obj._stop()
-            if task:
-                self.message_user(
-                    request,
-                    f"Stream stopped (Task: {task.task_id} Status: {task.status}",
-                )
+            if obj.task_id:
+                obj._stop()
+                self.message_user(request, "Stream stopped.")
             else:
                 self.message_user(request, "No task to stop.")
             return HttpResponseRedirect("..")
