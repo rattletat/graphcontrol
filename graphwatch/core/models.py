@@ -155,12 +155,16 @@ class Action(Edge):
 
     def execute(self, source: Node, target: Node):
         source_nodes = (
-            source.group.nodes[: (random.randrange(self.min_nodes, self.max_nodes + 1))]
+            source.group.nodes.all()[
+                : (random.randrange(self.min_nodes, self.max_nodes + 1))
+            ]
             if source._is_group()
             else [source]
         )
         target_nodes = (
-            target.group.nodes[: (random.randrange(self.min_nodes, self.max_nodes + 1))]
+            target.group.nodes.all()[
+                : (random.randrange(self.min_nodes, self.max_nodes + 1))
+            ]
             if target._is_group()
             else [target]
         )
