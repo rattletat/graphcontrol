@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.contenttypes.models import ContentType
 
 from graphwatch.core.models import Node
+from graphwatch.twitter.models import Account
 
 
 class TweetInlineForm(forms.BaseInlineFormSet):
@@ -18,6 +19,15 @@ class TweetInlineForm(forms.BaseInlineFormSet):
 #         model = Account.following.through
 #         fields = ["to_account"]
 #         labels = {"to_account": "Account"}
+
+
+class GroupsInlineForm(forms.ModelForm):
+    class Meta:
+        model = Account.groups.through
+        exclude = []
+        # exclude = []
+        # fields = ["name"]
+        # labels = {"to_account": "Account"}
 
 
 class ActionForm(forms.ModelForm):

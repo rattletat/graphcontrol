@@ -154,26 +154,22 @@ class Action(Edge):
         raise NotImplementedError
 
     def execute(self, source: Node, target: Node):
-        eta = (
-            timezone.now()
-            + self.min_delay
-            + random.random() * (self.max_delay - self.min_delay)
-        )
         source_nodes = (
-            source.group.nodes.limit(
-                random.randrange(self.min_nodes, self.max_nodes + 1)
-            )
+            source.group.nodes[: (random.randrange(self.min_nodes, self.max_nodes + 1))]
             if source._is_group()
             else [source]
         )
         target_nodes = (
-            target.group.nodes.limit(
-                random.randrange(self.min_nodes, self.max_nodes + 1)
-            )
+            target.group.nodes[: (random.randrange(self.min_nodes, self.max_nodes + 1))]
             if target._is_group()
             else [target]
         )
         for source, target in itertools.product(source_nodes, target_nodes):
+            eta = (
+                timezone.now()
+                + self.min_delay
+                + random.random() * (self.max_delay - self.min_delay)
+            )
             task_kwargs = self.get_task_kwargs(source, target)
             self.task.apply_async(eta=eta, kwargs=task_kwargs)
 
