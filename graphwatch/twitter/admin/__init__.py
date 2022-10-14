@@ -74,7 +74,7 @@ class AccountAdmin(polyadmin.PolymorphicInlineSupportMixin, admin.ModelAdmin):
         "view_followers_link",
         "get_bot_status",
     ]
-    list_filter = [IsBotFilter]
+    list_filter = [IsBotFilter, "groups"]
     fields = [
         "view_twitter_profile",
         "twitter_id",
@@ -200,6 +200,7 @@ class AccountAdmin(polyadmin.PolymorphicInlineSupportMixin, admin.ModelAdmin):
 class TweetAdmin(ReadOnlyAdmin):
     search_fields = ["author__username", "author__name", "text"]
     list_display = ["get_author_name", "created_at", "text", "like_count"]
+    list_filter = ["author__groups"]
     ordering = ["-created_at"]
 
     @admin.display(description="Twitter User")

@@ -33,7 +33,7 @@ class Group(Node):
         return self.nodes.order_by("?").first()
 
     def __str__(self):
-        return f"Group: {self.name}"
+        return self.name
 
 
 class Edge(UUIDModel, TimeStampedModel, PolymorphicModel):
