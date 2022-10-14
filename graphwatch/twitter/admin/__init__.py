@@ -30,6 +30,7 @@ class StreamAdmin(admin.ModelAdmin):
     readonly_fields = ["_get_task_status"]
     change_form_template = "admin/stream_changeform.html"
     add_form_template = "admin/stream_addform.html"
+    actions = ["start_stream", "stop_stream"]
     # filter_horizontal = ["follow"]
 
     def get_form(self, request, obj=None, **kwargs):
@@ -43,6 +44,16 @@ class StreamAdmin(admin.ModelAdmin):
     def _get_task_status(self, obj):
         task = celery_app.AsyncResult(obj.task_id)
         return task.status
+
+    @admin.action(description="Start selected streams")
+    def start_stream(modeladmin, request, queryset):
+        for stream in queryset:
+            stream._start()
+
+    @admin.action(description="Stop selected streams")
+    def stop_stream(modeladmin, request, queryset):
+        for stream in queryset:
+            stream._stop()
 
     def response_change(self, request, obj):
         if "_start-stream" in request.POST:
