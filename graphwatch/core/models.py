@@ -74,7 +74,7 @@ class Event(Edge):
         for monitor in monitors:
             for action in monitor.actions.all():
                 if action.source:
-                    source = action.source.real_instance
+                    source = action.source
                 else:
                     if (
                         real_event.source
@@ -89,7 +89,7 @@ class Event(Edge):
                     else:
                         source = None
                 if action.target:
-                    target = action.target.real_instance
+                    target = action.target
                 else:
                     if (
                         real_event.target

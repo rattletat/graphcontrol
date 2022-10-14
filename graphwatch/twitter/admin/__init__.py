@@ -46,7 +46,7 @@ class StreamAdmin(admin.ModelAdmin):
             task = celery_app.AsyncResult(obj.task_id)
             return task.status
         else:
-            return "Stopped"
+            return "STOPPED"
 
     @admin.action(description="Start selected streams")
     def start_stream(modeladmin, request, queryset):
